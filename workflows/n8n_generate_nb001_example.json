@@ -1,0 +1,89 @@
+{
+  "name": "MercadoLibre Generate NB001 Example",
+  "description": "Example n8n workflow structure for calling the local MercadoLibre AutoDesign /generate endpoint.",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "product_id",
+              "value": "NB001"
+            },
+            {
+              "name": "csv",
+              "value": "input/products/products_sample.csv"
+            },
+            {
+              "name": "plan",
+              "value": "plans/NB001_product_plan.json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-product-input-1",
+      "name": "Set Product Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8899/generate",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"product_id\": \"{{$json.product_id}}\",\n  \"csv\": \"{{$json.csv}}\",\n  \"plan\": \"{{$json.plan}}\"\n}",
+        "options": {}
+      },
+      "id": "http-generate-1",
+      "name": "HTTP Request Generate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        760,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Product Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Product Input": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "notes": "This is a clear example structure. Depending on your n8n version, you may need to adjust Set/Edit Fields or HTTP Request parameter names after import."
+}

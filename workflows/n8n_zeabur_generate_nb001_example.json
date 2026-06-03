@@ -1,0 +1,93 @@
+{
+  "name": "Zeabur MercadoLibre Generate NB001 Example",
+  "description": "Example n8n workflow for calling the Zeabur-hosted MercadoLibre AutoDesign /generate endpoint.",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-zeabur-1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "product_id",
+              "value": "NB001"
+            },
+            {
+              "name": "csv",
+              "value": "input/products/products_sample.csv"
+            },
+            {
+              "name": "plan",
+              "value": "plans/NB001_product_plan.json"
+            },
+            {
+              "name": "zeabur_base_url",
+              "value": "https://mercadolibre-autodesign.zeabur.app"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-zeabur-input-1",
+      "name": "Set Zeabur Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.zeabur_base_url}}/generate",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"product_id\": \"{{$json.product_id}}\",\n  \"csv\": \"{{$json.csv}}\",\n  \"plan\": \"{{$json.plan}}\"\n}",
+        "options": {}
+      },
+      "id": "http-zeabur-generate-1",
+      "name": "HTTP Request Zeabur Generate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        800,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Zeabur Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Zeabur Input": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Zeabur Generate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "notes": "Replace zeabur_base_url with your actual Zeabur public service URL before running."
+}

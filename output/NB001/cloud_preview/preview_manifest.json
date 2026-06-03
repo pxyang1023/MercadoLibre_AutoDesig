@@ -1,0 +1,61 @@
+{
+  "product_id": "NB001",
+  "product_name": "NB Bebida de guayaba con ciruela",
+  "language": "es",
+  "market": "LatAm",
+  "source_folder": "output/NB001/final",
+  "preview_folder": "output/NB001/cloud_preview",
+  "zip_file": "NB001_cloud_preview.zip",
+  "copywriting_result": "copywriting_result.json",
+  "images": [
+    {
+      "index": 1,
+      "type": "main_white",
+      "filename": "01_main_white.png",
+      "relative_path": "images/01_main_white.png",
+      "download_name": "NB001_01_main_white.png"
+    },
+    {
+      "index": 2,
+      "type": "selling_points",
+      "filename": "02_selling_points.png",
+      "relative_path": "images/02_selling_points.png",
+      "download_name": "NB001_02_selling_points.png"
+    },
+    {
+      "index": 3,
+      "type": "flavor",
+      "filename": "03_flavor.png",
+      "relative_path": "images/03_flavor.png",
+      "download_name": "NB001_03_flavor.png"
+    },
+    {
+      "index": 4,
+      "type": "ingredients",
+      "filename": "04_ingredients.png",
+      "relative_path": "images/04_ingredients.png",
+      "download_name": "NB001_04_ingredients.png"
+    },
+    {
+      "index": 5,
+      "type": "lifestyle",
+      "filename": "05_lifestyle.png",
+      "relative_path": "images/05_lifestyle.png",
+      "download_name": "NB001_05_lifestyle.png"
+    },
+    {
+      "index": 6,
+      "type": "capacity",
+      "filename": "06_capacity.png",
+      "relative_path": "images/06_capacity.png",
+      "download_name": "NB001_06_capacity.png"
+    },
+    {
+      "index": 7,
+      "type": "summary",
+      "filename": "07_summary.png",
+      "relative_path": "images/07_summary.png",
+      "download_name": "NB001_07_summary.png"
+    }
+  ]
+}

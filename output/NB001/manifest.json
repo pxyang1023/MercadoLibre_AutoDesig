@@ -1,0 +1,51 @@
+{
+  "product_id": "NB001",
+  "plan": "plans/NB001_product_plan.json",
+  "input_image": "input/images/inputimagesnb_bottle.jpg",
+  "assets_folder": "output/NB001/assets",
+  "final_folder": "output/NB001/final",
+  "images": [
+    {
+      "index": 1,
+      "filename": "01_main_white.png",
+      "path": "output/NB001/final/01_main_white.png",
+      "type": "main_white"
+    },
+    {
+      "index": 2,
+      "filename": "02_selling_points.png",
+      "path": "output/NB001/final/02_selling_points.png",
+      "type": "selling_points"
+    },
+    {
+      "index": 3,
+      "filename": "03_flavor.png",
+      "path": "output/NB001/final/03_flavor.png",
+      "type": "flavor"
+    },
+    {
+      "index": 4,
+      "filename": "04_ingredients.png",
+      "path": "output/NB001/final/04_ingredients.png",
+      "type": "ingredients"
+    },
+    {
+      "index": 5,
+      "filename": "05_lifestyle.png",
+      "path": "output/NB001/final/05_lifestyle.png",
+      "type": "lifestyle"
+    },
+    {
+      "index": 6,
+      "filename": "06_capacity.png",
+      "path": "output/NB001/final/06_capacity.png",
+      "type": "capacity"
+    },
+    {
+      "index": 7,
+      "filename": "07_summary.png",
+      "path": "output/NB001/final/07_summary.png",
+      "type": "summary"
+    }
+  ]
+}

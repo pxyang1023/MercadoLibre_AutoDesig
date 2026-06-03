@@ -1,0 +1,2 @@
+product_id,product_name,category,language,market,selling_points,capacity,input_image,status
+NB001,NB Bebida de guayaba con ciruela,beverage,es,LatAm,"Sabor fresco a guayaba; Toque a ciruela dulce y ácido; Botella de 1L para compartir",1L,nb_bottle.jpg,pending

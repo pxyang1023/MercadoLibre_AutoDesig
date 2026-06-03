@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/generate.py": {
+      "runtime": "python3.12"
+    }
+  },
+  "routes": [
+    {
+      "src": "/generate",
+      "dest": "/api/generate.py"
+    }
+  ]
+}

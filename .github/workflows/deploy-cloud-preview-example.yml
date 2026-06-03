@@ -1,0 +1,17 @@
+name: Deploy Cloud Preview Example
+
+on:
+  workflow_dispatch:
+
+jobs:
+  preview-note:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Explain deployment split
+        run: |
+          echo "Run the image generator on Zeabur/Railway."
+          echo "Then upload output/NB001/cloud_preview to Cloudflare Pages or another static host."
+          echo "This workflow is a template placeholder for future static preview deployment."

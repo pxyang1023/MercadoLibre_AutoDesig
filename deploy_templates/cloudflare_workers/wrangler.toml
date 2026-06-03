@@ -1,0 +1,10 @@
+name = "mercadolibre-autodesign-gateway"
+main = "worker.js"
+compatibility_date = "2026-06-03"
+
+[vars]
+# Set this to your Zeabur/Railway generator service URL in production.
+GENERATOR_BASE_URL = "https://your-generator-service.example.com"
+
+# Secrets should be set with:
+# npx wrangler secret put API_TOKEN

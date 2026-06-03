@@ -1,0 +1,33 @@
+{
+  "canvas_size": [1024, 1024],
+  "output_count": 7,
+  "default_language": "es",
+  "target_market": "LatAm",
+  "image_provider": "openai",
+  "comfyui_base_url": "http://127.0.0.1:8188",
+  "providers": {
+    "openai": {
+      "model": "gpt-image-2",
+      "mode": "api",
+      "api_key_env": "OPENAI_API_KEY"
+    },
+    "gemini": {
+      "model": "gemini-image",
+      "mode": "api",
+      "api_key_env": "GEMINI_API_KEY"
+    },
+    "comfyui": {
+      "base_url": "http://127.0.0.1:8188",
+      "mode": "local"
+    }
+  },
+  "output_naming": [
+    "01_main_white.png",
+    "02_selling_points.png",
+    "03_flavor.png",
+    "04_ingredients.png",
+    "05_lifestyle.png",
+    "06_capacity.png",
+    "07_summary.png"
+  ]
+}
