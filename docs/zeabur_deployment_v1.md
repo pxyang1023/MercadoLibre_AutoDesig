@@ -382,6 +382,14 @@ MercadoLibre AutoDesign Server V1 started at http://0.0.0.0:8080
 
 如果日志里仍是 `127.0.0.1:8899`，说明 Zeabur 环境变量没有生效，或部署的不是最新镜像。请重新部署并确认 Environment Variables。
 
+浏览器测试入口：
+
+```text
+https://你的域名/
+https://你的域名/health
+https://你的域名/generate-test
+```
+
 ## 14. 后续扩展批量产品
 
 当前 V1 只支持 NB001。
