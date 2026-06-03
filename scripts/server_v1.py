@@ -75,17 +75,19 @@ def run_full_generation(request_data):
         raise RuntimeError("product_id is required.")
     csv_path = request_data.get("csv", DEFAULT_CSV)
     plan_path = request_data.get("plan", DEFAULT_PLAN)
+    resolved_csv_path = resolve_project_path(csv_path)
+    resolved_plan_path = resolve_project_path(plan_path)
     copy_path = Path("output") / product_id / "copywriting_result.json"
 
-    print(f"generate request: product_id={product_id} csv={csv_path} plan={plan_path}")
+    print(f"generate request: product_id={product_id} csv={resolved_csv_path} plan={resolved_plan_path}")
 
-    copywriting_outputs = run_copywriting(csv_path)
+    copywriting_outputs = run_copywriting(resolved_csv_path)
     print(f"step copywriting complete: {len(copywriting_outputs)} result(s)")
 
-    apply_result = run_apply(copy_path, plan_path)
+    apply_result = run_apply(copy_path, resolved_plan_path)
     print(f"step apply copywriting complete: {apply_result['plan_path']}")
 
-    pipeline_result = run_image_pipeline(plan_path)
+    pipeline_result = run_image_pipeline(resolved_plan_path)
     print(f"step image pipeline complete: {pipeline_result['output_folder']}")
 
     preview_result = export_preview(product_id)
