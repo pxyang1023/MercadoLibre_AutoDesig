@@ -405,6 +405,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except ImportError:
-        print("If you choose to use Flask later, install it with: pip install flask", file=sys.stderr)
+    except ImportError as exc:
+        print(f"Import error: {exc}", file=sys.stderr)
         sys.exit(1)
