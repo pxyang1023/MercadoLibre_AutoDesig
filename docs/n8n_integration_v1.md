@@ -10,7 +10,7 @@
 POST http://127.0.0.1:8899/generate-batch
 ```
 
-这样 n8n 只需要发送一个 JSON 数组，不需要写代码循环。
+n8n 只需要发送一个 JSON 数组，不需要写循环代码。
 
 ## 2. 前置条件
 
@@ -26,7 +26,13 @@ python scripts/server_v1.py
 http://127.0.0.1:8899/health
 ```
 
-批量 plan 已存在：
+产品 CSV：
+
+```text
+data/products.csv
+```
+
+产品 plan：
 
 ```text
 plans/NB001_product_plan.json
@@ -34,32 +40,14 @@ plans/NB002_product_plan.json
 plans/NB003_product_plan.json
 ```
 
-批量 CSV 已存在：
-
-```text
-input/products/products_batch_sample.csv
-```
-
-## 3. 最小工作流结构
+## 3. 最小工作流
 
 不使用 Code 节点时，最小 n8n 工作流只需要：
 
 1. `Manual Trigger`
 2. `HTTP Request`
 
-可选后续节点：
-- `IF`：判断顶层 `status` 是否为 `success` 或 `partial_failed`。
-- `Google Sheets`：回填每个产品的 `preview_index`、`zip_file`、`status`。
-
-## 4. 批量 HTTP Request 节点配置
-
-节点类型：
-
-```text
-HTTP Request
-```
-
-配置：
+## 4. HTTP Request 节点配置
 
 ```text
 Method: POST
@@ -75,26 +63,26 @@ JSON Body：
   "items": [
     {
       "product_id": "NB001",
-      "csv": "input/products/products_batch_sample.csv",
+      "csv": "data/products.csv",
       "plan": "plans/NB001_product_plan.json"
     },
     {
       "product_id": "NB002",
-      "csv": "input/products/products_batch_sample.csv",
+      "csv": "data/products.csv",
       "plan": "plans/NB002_product_plan.json"
     },
     {
       "product_id": "NB003",
-      "csv": "input/products/products_batch_sample.csv",
+      "csv": "data/products.csv",
       "plan": "plans/NB003_product_plan.json"
     }
   ]
 }
 ```
 
-## 5. 批量返回字段
+## 5. 返回字段
 
-成功或部分成功时会返回：
+批量接口返回：
 
 ```json
 {
@@ -123,15 +111,14 @@ JSON Body：
 ```
 
 顶层 `status`：
+
 - `success`：全部产品成功。
 - `partial_failed`：部分产品失败。
 - `error`：全部产品失败。
 
-每个产品自己的结果都在 `results` 中。
-
 ## 6. 浏览器批量测试
 
-不用 n8n 时，可以直接打开：
+不用 n8n 时，可以打开：
 
 ```text
 http://127.0.0.1:8899/generate-batch-test
@@ -145,52 +132,7 @@ NB002
 NB003
 ```
 
-首页也有按钮：
-
-```text
-http://127.0.0.1:8899/
-```
-
-点击 `Generate Batch Test` 即可测试。
-
-## 7. 单产品接口仍可使用
-
-如果只生成一个产品，也可以继续调用：
-
-```text
-POST http://127.0.0.1:8899/generate
-```
-
-Body：
-
-```json
-{
-  "product_id": "NB001",
-  "csv": "input/products/products_sample.csv",
-  "plan": "plans/NB001_product_plan.json"
-}
-```
-
-## 8. 如何回填 Google Sheets
-
-批量接口返回的是一个 `results` 数组。
-
-如果当前 n8n 无法使用 Code 节点，可以先把完整返回 JSON 保存到表格的一列，例如：
-
-```text
-batch_result_json
-```
-
-后续 n8n 恢复 Code 节点后，再拆分：
-- `results[].product_id`
-- `results[].status`
-- `results[].preview_index`
-- `results[].zip_file`
-- `results[].message`
-
-如果使用 n8n 的 Item Lists / Split Out 工具可用，也可以把 `results` 拆成多条 item 后回填。
-
-## 9. 云端地址替换
+## 7. 云端地址替换
 
 本地地址：
 
@@ -204,25 +146,9 @@ Zeabur 地址示例：
 https://你的域名/generate-batch
 ```
 
-Zeabur 环境变量保持：
-
-```text
-HOST=0.0.0.0
-PORT=8080
-PYTHONUNBUFFERED=1
-```
-
-## 10. 常见报错
+## 8. 常见报错
 
 ### items 不是数组
-
-检查 JSON Body 是否写成：
-
-```json
-{
-  "items": []
-}
-```
 
 `items` 必须是数组，且至少 1 项。
 

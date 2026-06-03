@@ -25,7 +25,7 @@ SERVICE_NAME = "MercadoLibre AutoDesign Server V1"
 DEFAULT_PRODUCT_ID = "NB001"
 DEFAULT_CSV = "input/products/products_sample.csv"
 DEFAULT_PLAN = "plans/NB001_product_plan.json"
-DEFAULT_BATCH_CSV = "input/products/products_batch_sample.csv"
+DEFAULT_BATCH_CSV = "data/products.csv"
 DEFAULT_BATCH_ITEMS = [
     {
         "product_id": "NB001",

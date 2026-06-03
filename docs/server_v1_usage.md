@@ -6,32 +6,33 @@
 
 服务会按产品执行：
 
-1. 生成规则版文案：`copywriting_pipeline_v1.py`
-2. 回写文案到 plan：`apply_copywriting_to_plan_v1.py`
-3. 生成 assets 和 final 图片：`run_pipeline_v1.py`
-4. 导出静态预览包：`export_cloud_preview_v1.py`
+1. 生成规则版文案。
+2. 回写文案到 product plan。
+3. 生成 assets 和 final 图片。
+4. 导出静态预览包和 ZIP。
 
-当前服务使用 Python 标准库 `http.server`，不需要额外 Web 框架。
+当前服务使用 Python 标准库 `http.server`。
 
 ## 2. 启动服务
 
-在项目根目录运行：
+本地启动：
 
 ```bash
 python scripts/server_v1.py
 ```
 
-本地默认监听：
+本地默认地址：
 
 ```text
 http://127.0.0.1:8899
 ```
 
-Zeabur 云端使用环境变量：
+Zeabur 云端环境变量：
 
 ```text
 HOST=0.0.0.0
 PORT=8080
+PYTHONUNBUFFERED=1
 ```
 
 ## 3. 可用接口
@@ -46,51 +47,34 @@ POST /generate
 POST /generate-batch
 ```
 
-说明：
-- `GET /`：浏览器测试面板。
-- `GET /health`：健康检查。
-- `GET /generate-test`：浏览器测试生成 NB001。
-- `GET /generate-batch-test`：浏览器测试批量生成 NB001、NB002、NB003。
-- `POST /generate`：正式单产品接口。
-- `POST /generate-batch`：正式批量接口，适合 n8n 直接调用。
+## 4. 浏览器测试
 
-## 4. 浏览器测试方式
-
-打开：
+打开首页：
 
 ```text
 http://127.0.0.1:8899/
 ```
 
-页面里有三个常用按钮：
+首页包含：
+
 - `Health Check`
 - `Generate NB001`
 - `Generate Batch Test`
 
-批量浏览器测试：
+批量测试入口：
 
 ```text
 http://127.0.0.1:8899/generate-batch-test
 ```
 
-它会使用固定参数生成：
-
-```text
-NB001
-NB002
-NB003
-```
-
 ## 5. 单产品接口
-
-请求：
 
 ```text
 POST http://127.0.0.1:8899/generate
 Content-Type: application/json
 ```
 
-Body：
+请求体：
 
 ```json
 {
@@ -100,98 +84,55 @@ Body：
 }
 ```
 
-成功返回：
-
-```json
-{
-  "status": "success",
-  "product_id": "NB001",
-  "output_folder": "output/NB001",
-  "final_folder": "output/NB001/final",
-  "preview_folder": "output/NB001/cloud_preview",
-  "preview_index": "output/NB001/cloud_preview/index.html",
-  "zip_file": "output/NB001/cloud_preview/NB001_cloud_preview.zip",
-  "images": [
-    "01_main_white.png",
-    "02_selling_points.png",
-    "03_flavor.png",
-    "04_ingredients.png",
-    "05_lifestyle.png",
-    "06_capacity.png",
-    "07_summary.png"
-  ]
-}
-```
-
 ## 6. 批量接口
 
-n8n 如果不能编辑 Code/Script 节点，可以直接用 HTTP Request 调用批量接口。
-
-请求：
+n8n 不需要 Code 节点，只需要 HTTP Request 调用：
 
 ```text
 POST http://127.0.0.1:8899/generate-batch
 Content-Type: application/json
 ```
 
-Body：
+请求体：
 
 ```json
 {
   "items": [
     {
       "product_id": "NB001",
-      "csv": "input/products/products_batch_sample.csv",
+      "csv": "data/products.csv",
       "plan": "plans/NB001_product_plan.json"
     },
     {
       "product_id": "NB002",
-      "csv": "input/products/products_batch_sample.csv",
+      "csv": "data/products.csv",
       "plan": "plans/NB002_product_plan.json"
     },
     {
       "product_id": "NB003",
-      "csv": "input/products/products_batch_sample.csv",
+      "csv": "data/products.csv",
       "plan": "plans/NB003_product_plan.json"
     }
   ]
 }
 ```
 
-返回示例：
+返回结果会包含：
 
-```json
-{
-  "status": "success",
-  "total": 3,
-  "success_count": 3,
-  "failed_count": 0,
-  "results": [
-    {
-      "product_id": "NB001",
-      "status": "success",
-      "preview_index": "output/NB001/cloud_preview/index.html",
-      "zip_file": "output/NB001/cloud_preview/NB001_cloud_preview.zip",
-      "images": [
-        "01_main_white.png",
-        "02_selling_points.png",
-        "03_flavor.png",
-        "04_ingredients.png",
-        "05_lifestyle.png",
-        "06_capacity.png",
-        "07_summary.png"
-      ]
-    }
-  ]
-}
-```
+- `status`
+- `total`
+- `success_count`
+- `failed_count`
+- `results`
 
-如果某个产品失败，不会影响其他产品继续执行。顶层 `status` 可能是：
-- `success`：全部成功。
-- `partial_failed`：部分成功、部分失败。
-- `error`：全部失败。
+每个产品单独返回：
 
-每个产品的具体结果在 `results` 数组里。
+- `product_id`
+- `status`
+- `preview_index`
+- `zip_file`
+- `images`
+- `message`，仅失败时出现
 
 ## 7. 输出目录
 
@@ -210,63 +151,24 @@ output/NB002/cloud_preview/index.html
 output/NB002/cloud_preview/NB002_cloud_preview.zip
 ```
 
-## 8. n8n 对接建议
+## 8. Zeabur 测试
 
-最小工作流：
-
-1. `Manual Trigger`
-2. `HTTP Request`
-
-HTTP Request 节点直接调用：
+部署后测试：
 
 ```text
-POST http://127.0.0.1:8899/generate-batch
+https://你的域名/
+https://你的域名/health
+https://你的域名/generate-batch-test
 ```
 
-Body 选择 JSON，填入 `items` 数组即可。
-
-后续可以把返回的 `results` 回填到 Google Sheets：
-- `product_id`
-- `status`
-- `preview_index`
-- `zip_file`
-- `message`
-
-## 9. 常见问题
-
-### items 为空
-
-接口会返回：
-
-```json
-{
-  "status": "error",
-  "message": "items must be a non-empty array."
-}
-```
-
-### 某个产品失败
-
-批量接口会继续执行后面的产品，并在该产品结果中返回：
-
-```json
-{
-  "product_id": "NB002",
-  "status": "error",
-  "message": "错误说明"
-}
-```
-
-### Zeabur 502
-
-确认环境变量：
+如果 Zeabur 显示 502，确认：
 
 ```text
 HOST=0.0.0.0
 PORT=8080
 ```
 
-确认 Dockerfile：
+Dockerfile 需要：
 
 ```text
 EXPOSE 8080
