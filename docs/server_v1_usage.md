@@ -2,18 +2,18 @@
 
 ## 1. 服务用途
 
-`scripts/server_v1.py` 是本地 HTTP 服务 V1，用于一键触发完整图片自动化链路。当前先支持单产品 `NB001`。
+`scripts/server_v1.py` 是本地和 Zeabur 云端都可以运行的 HTTP 服务，用于触发美客多产品图片自动化链路。
 
-服务会依次执行：
+服务会按产品执行：
 
-1. `copywriting_pipeline_v1.py`
-2. `apply_copywriting_to_plan_v1.py`
-3. `run_pipeline_v1.py`
-4. `export_cloud_preview_v1.py`
+1. 生成规则版文案：`copywriting_pipeline_v1.py`
+2. 回写文案到 plan：`apply_copywriting_to_plan_v1.py`
+3. 生成 assets 和 final 图片：`run_pipeline_v1.py`
+4. 导出静态预览包：`export_cloud_preview_v1.py`
 
-本版本使用 Python 标准库 `http.server`，不需要 Flask。
+当前服务使用 Python 标准库 `http.server`，不需要额外 Web 框架。
 
-## 2. 如何启动
+## 2. 启动服务
 
 在项目根目录运行：
 
@@ -21,88 +21,76 @@
 python scripts/server_v1.py
 ```
 
-启动成功后会显示：
+本地默认监听：
 
 ```text
-MercadoLibre AutoDesign Server V1 started at http://127.0.0.1:8899
+http://127.0.0.1:8899
 ```
 
-## 3. 如何测试 /health
-
-### 浏览器方式
-
-浏览器打开：
+Zeabur 云端使用环境变量：
 
 ```text
-http://127.0.0.1:8899/health
+HOST=0.0.0.0
+PORT=8080
 ```
 
-或使用 PowerShell：
+## 3. 可用接口
 
-```powershell
-Invoke-RestMethod -Uri http://127.0.0.1:8899/health -Method GET
+```text
+GET  /
+GET  /health
+GET  /generate-test
+GET  /generate-batch-test
+GET  /preview_manifest
+POST /generate
+POST /generate-batch
 ```
 
-返回：
+说明：
+- `GET /`：浏览器测试面板。
+- `GET /health`：健康检查。
+- `GET /generate-test`：浏览器测试生成 NB001。
+- `GET /generate-batch-test`：浏览器测试批量生成 NB001、NB002、NB003。
+- `POST /generate`：正式单产品接口。
+- `POST /generate-batch`：正式批量接口，适合 n8n 直接调用。
 
-```json
-{
-  "status": "ok",
-  "service": "MercadoLibre AutoDesign Server V1"
-}
-```
+## 4. 浏览器测试方式
 
-## 3.1 浏览器测试面板
-
-现在可以直接用浏览器打开首页：
+打开：
 
 ```text
 http://127.0.0.1:8899/
 ```
 
-首页包含：
+页面里有三个常用按钮：
+- `Health Check`
+- `Generate NB001`
+- `Generate Batch Test`
 
-- `Health Check`：跳转到 `/health`
-- `Generate NB001`：跳转到 `/generate-test`
-- `Preview Manifest`：如果已生成预览包，则跳转到 `/preview_manifest`
-
-说明：
-
-- `/generate` 是正式 POST 接口，给 n8n 和自动化流程使用。
-- `/generate-test` 是浏览器测试接口，会用固定参数生成 NB001。
-- 这样测试 Zeabur 服务时不需要 Postman，也不需要 curl。
-
-## 4. 如何测试 /generate
-
-PowerShell 示例：
-
-```powershell
-Invoke-RestMethod `
-  -Uri http://127.0.0.1:8899/generate `
-  -Method POST `
-  -ContentType "application/json" `
-  -Body "{\"product_id\":\"NB001\",\"csv\":\"input/products/products_sample.csv\",\"plan\":\"plans/NB001_product_plan.json\"}"
-```
-
-请求体：
-
-```json
-{
-  "product_id": "NB001",
-  "csv": "input/products/products_sample.csv",
-  "plan": "plans/NB001_product_plan.json"
-}
-```
-
-### 浏览器方式测试生成
-
-打开：
+批量浏览器测试：
 
 ```text
-http://127.0.0.1:8899/generate-test
+http://127.0.0.1:8899/generate-batch-test
 ```
 
-它会使用固定请求：
+它会使用固定参数生成：
+
+```text
+NB001
+NB002
+NB003
+```
+
+## 5. 单产品接口
+
+请求：
+
+```text
+POST http://127.0.0.1:8899/generate
+Content-Type: application/json
+```
+
+Body：
 
 ```json
 {
@@ -112,70 +100,174 @@ http://127.0.0.1:8899/generate-test
 }
 ```
 
-成功后页面会显示：
+成功返回：
 
-- `status`
+```json
+{
+  "status": "success",
+  "product_id": "NB001",
+  "output_folder": "output/NB001",
+  "final_folder": "output/NB001/final",
+  "preview_folder": "output/NB001/cloud_preview",
+  "preview_index": "output/NB001/cloud_preview/index.html",
+  "zip_file": "output/NB001/cloud_preview/NB001_cloud_preview.zip",
+  "images": [
+    "01_main_white.png",
+    "02_selling_points.png",
+    "03_flavor.png",
+    "04_ingredients.png",
+    "05_lifestyle.png",
+    "06_capacity.png",
+    "07_summary.png"
+  ]
+}
+```
+
+## 6. 批量接口
+
+n8n 如果不能编辑 Code/Script 节点，可以直接用 HTTP Request 调用批量接口。
+
+请求：
+
+```text
+POST http://127.0.0.1:8899/generate-batch
+Content-Type: application/json
+```
+
+Body：
+
+```json
+{
+  "items": [
+    {
+      "product_id": "NB001",
+      "csv": "input/products/products_batch_sample.csv",
+      "plan": "plans/NB001_product_plan.json"
+    },
+    {
+      "product_id": "NB002",
+      "csv": "input/products/products_batch_sample.csv",
+      "plan": "plans/NB002_product_plan.json"
+    },
+    {
+      "product_id": "NB003",
+      "csv": "input/products/products_batch_sample.csv",
+      "plan": "plans/NB003_product_plan.json"
+    }
+  ]
+}
+```
+
+返回示例：
+
+```json
+{
+  "status": "success",
+  "total": 3,
+  "success_count": 3,
+  "failed_count": 0,
+  "results": [
+    {
+      "product_id": "NB001",
+      "status": "success",
+      "preview_index": "output/NB001/cloud_preview/index.html",
+      "zip_file": "output/NB001/cloud_preview/NB001_cloud_preview.zip",
+      "images": [
+        "01_main_white.png",
+        "02_selling_points.png",
+        "03_flavor.png",
+        "04_ingredients.png",
+        "05_lifestyle.png",
+        "06_capacity.png",
+        "07_summary.png"
+      ]
+    }
+  ]
+}
+```
+
+如果某个产品失败，不会影响其他产品继续执行。顶层 `status` 可能是：
+- `success`：全部成功。
+- `partial_failed`：部分成功、部分失败。
+- `error`：全部失败。
+
+每个产品的具体结果在 `results` 数组里。
+
+## 7. 输出目录
+
+每个产品会生成独立目录：
+
+```text
+output/{product_id}/final
+output/{product_id}/cloud_preview
+```
+
+例如：
+
+```text
+output/NB002/final
+output/NB002/cloud_preview/index.html
+output/NB002/cloud_preview/NB002_cloud_preview.zip
+```
+
+## 8. n8n 对接建议
+
+最小工作流：
+
+1. `Manual Trigger`
+2. `HTTP Request`
+
+HTTP Request 节点直接调用：
+
+```text
+POST http://127.0.0.1:8899/generate-batch
+```
+
+Body 选择 JSON，填入 `items` 数组即可。
+
+后续可以把返回的 `results` 回填到 Google Sheets：
 - `product_id`
-- `final_folder`
-- `preview_folder`
+- `status`
+- `preview_index`
 - `zip_file`
-- `images`
-- 原始 JSON 内容
+- `message`
 
-Zeabur 云端测试时，把域名换成你的 Zeabur 域名即可：
+## 9. 常见问题
 
-```text
-https://你的-zeabur-域名/
-https://你的-zeabur-域名/generate-test
-https://你的-zeabur-域名/preview_manifest
+### items 为空
+
+接口会返回：
+
+```json
+{
+  "status": "error",
+  "message": "items must be a non-empty array."
+}
 ```
 
-## 5. 本地生成结果在哪里
+### 某个产品失败
 
-最终图片：
+批量接口会继续执行后面的产品，并在该产品结果中返回：
 
-```text
-output/NB001/final
+```json
+{
+  "product_id": "NB002",
+  "status": "error",
+  "message": "错误说明"
+}
 ```
 
-云端预览包：
+### Zeabur 502
+
+确认环境变量：
 
 ```text
-output/NB001/cloud_preview
+HOST=0.0.0.0
+PORT=8080
 ```
 
-ZIP：
+确认 Dockerfile：
 
 ```text
-output/NB001/cloud_preview/NB001_cloud_preview.zip
+EXPOSE 8080
 ```
-
-## 6. 如何打开本地 preview index.html
-
-打开：
-
-```text
-output/NB001/cloud_preview/index.html
-```
-
-可以直接双击，也可以拖到浏览器中查看。
-
-## 7. 后续如何接 n8n
-
-n8n 可用 HTTP Request 节点调用：
-
-1. `GET http://127.0.0.1:8899/health`
-2. `POST http://127.0.0.1:8899/generate`
-
-`/generate` 返回的 `preview_index`、`zip_file`、`final_folder` 和 `images` 字段可以回写到表格或商品任务系统。
-
-## 8. 后续如何上传 cloud_preview 到 Cloudflare Workers / Pages
-
-服务当前只负责本地生成，不上传云端。
-
-后续可以让 n8n 在 `/generate` 成功后：
-
-1. 读取 `output/NB001/cloud_preview`。
-2. 上传整个目录到 Cloudflare Pages。
-3. 或上传 `NB001_cloud_preview.zip` 到对象存储。
-4. 将生成的云端 URL 回写到业务表格。

@@ -1,0 +1,111 @@
+{
+  "product_id": "NB002",
+  "product_name": "Sierra japonesa de doble filo",
+  "category": "tools",
+  "language": "es",
+  "market": "LatAm",
+  "capacity": "1 pieza",
+  "input_image": "input/images/saw.jpg",
+  "output_folder": "output/NB002",
+  "selling_points": [
+    "Hoja de doble filo",
+    "Mango cómodo",
+    "Corte preciso para madera",
+    "Diseño práctico para carpintería"
+  ],
+  "images": [
+    {
+      "index": 1,
+      "type": "main_white",
+      "filename": "01_main_white.png",
+      "title": "",
+      "subtitle": "",
+      "bullets": []
+    },
+    {
+      "index": 2,
+      "type": "selling_points",
+      "filename": "02_selling_points.png",
+      "title": "Sierra japonesa de doble filo 1 pieza Bebida Refrescante",
+      "subtitle": "Sabor fresco para compartir",
+      "bullets": [
+        "Hoja de doble filo",
+        "Mango cómodo",
+        "Corte preciso para madera"
+      ]
+    },
+    {
+      "index": 3,
+      "type": "flavor",
+      "filename": "03_flavor.png",
+      "title": "Sabor fresco y refrescante",
+      "subtitle": "Hoja de doble filo",
+      "bullets": [
+        "Hoja de doble filo",
+        "Mango cómodo",
+        "Corte preciso para madera"
+      ]
+    },
+    {
+      "index": 4,
+      "type": "ingredients",
+      "filename": "04_ingredients.png",
+      "title": "Detalles del producto",
+      "subtitle": "Características principales",
+      "bullets": [
+        "Mango cómodo",
+        "Corte preciso para madera",
+        "Diseño práctico para carpintería"
+      ]
+    },
+    {
+      "index": 5,
+      "type": "lifestyle",
+      "filename": "05_lifestyle.png",
+      "title": "Para disfrutar en cualquier momento",
+      "subtitle": "Diseño práctico para carpintería",
+      "bullets": [
+        "Corte preciso para madera",
+        "Diseño práctico para carpintería",
+        "Sabor fresco y agradable para disfrutar en frio"
+      ]
+    },
+    {
+      "index": 6,
+      "type": "capacity",
+      "filename": "06_capacity.png",
+      "title": "Botella de 1L",
+      "subtitle": "Más contenido para compartir",
+      "bullets": [
+        "Corte preciso para madera",
+        "Diseño práctico para carpintería",
+        "Sabor fresco y agradable para disfrutar en frio"
+      ]
+    },
+    {
+      "index": 7,
+      "type": "summary",
+      "filename": "07_summary.png",
+      "title": "Frescura, sabor y practicidad",
+      "subtitle": "Sierra japonesa de doble filo 1 pieza Bebida Refrescante",
+      "bullets": [
+        "Hoja de doble filo",
+        "Mango cómodo",
+        "Corte preciso para madera"
+      ]
+    }
+  ],
+  "copywriting": {
+    "new_title": "Sierra japonesa de doble filo 1 pieza Bebida Refrescante",
+    "five_bullets": [
+      "Hoja de doble filo",
+      "Mango cómodo",
+      "Corte preciso para madera",
+      "Diseño práctico para carpintería",
+      "Sabor fresco y agradable para disfrutar en frio"
+    ],
+    "background_keywords": "sierra, japonesa, doble, filo, tools, pieza, hoja, mango, cómodo, corte, preciso, madera, diseño, práctico, carpintería, sabor, fresco, agradable, disfrutar, frio",
+    "qc_result": "pass",
+    "problem_note": "无问题"
+  }
+}

@@ -2,52 +2,56 @@
 
 ## 1. 目标
 
-本说明用于快速创建一个最小可用的 n8n 工作流，让 n8n 调用本地 HTTP 服务：
+让 n8n 调用本地或 Zeabur 云端 HTTP 服务，自动生成美客多产品图片集。
+
+因为当前 n8n 的 Code/Script 节点无法编辑，推荐直接调用批量接口：
 
 ```text
-POST http://127.0.0.1:8899/generate
+POST http://127.0.0.1:8899/generate-batch
 ```
 
-调用成功后，本地服务会自动生成 NB001 的图片集、文案结果、最终图片、云端预览页面和 zip 包。
+这样 n8n 只需要发送一个 JSON 数组，不需要写代码循环。
 
 ## 2. 前置条件
 
-请先确认：
-
-- 本地服务已启动：
+本地服务已启动：
 
 ```bash
 python scripts/server_v1.py
 ```
 
-- 浏览器访问健康检查接口返回 `ok`：
+健康检查返回 ok：
 
 ```text
 http://127.0.0.1:8899/health
 ```
 
-- 以下文件已存在：
+批量 plan 已存在：
 
 ```text
-input/products/products_sample.csv
 plans/NB001_product_plan.json
+plans/NB002_product_plan.json
+plans/NB003_product_plan.json
+```
+
+批量 CSV 已存在：
+
+```text
+input/products/products_batch_sample.csv
 ```
 
 ## 3. 最小工作流结构
 
-n8n 最小工作流建议包含：
+不使用 Code 节点时，最小 n8n 工作流只需要：
 
 1. `Manual Trigger`
-2. `Set` 或 `Edit Fields`
-3. `HTTP Request`
+2. `HTTP Request`
 
 可选后续节点：
+- `IF`：判断顶层 `status` 是否为 `success` 或 `partial_failed`。
+- `Google Sheets`：回填每个产品的 `preview_index`、`zip_file`、`status`。
 
-- `Code`：整理返回字段。
-- `IF`：判断 `status` 是否为 `success`。
-- `Google Sheets`：回填 `preview_index`、`zip_file`、`final_folder` 等字段。
-
-## 4. HTTP Request 节点配置
+## 4. 批量 HTTP Request 节点配置
 
 节点类型：
 
@@ -59,12 +63,105 @@ HTTP Request
 
 ```text
 Method: POST
-URL: http://127.0.0.1:8899/generate
+URL: http://127.0.0.1:8899/generate-batch
 Send Body: JSON
 Content-Type: application/json
 ```
 
 JSON Body：
+
+```json
+{
+  "items": [
+    {
+      "product_id": "NB001",
+      "csv": "input/products/products_batch_sample.csv",
+      "plan": "plans/NB001_product_plan.json"
+    },
+    {
+      "product_id": "NB002",
+      "csv": "input/products/products_batch_sample.csv",
+      "plan": "plans/NB002_product_plan.json"
+    },
+    {
+      "product_id": "NB003",
+      "csv": "input/products/products_batch_sample.csv",
+      "plan": "plans/NB003_product_plan.json"
+    }
+  ]
+}
+```
+
+## 5. 批量返回字段
+
+成功或部分成功时会返回：
+
+```json
+{
+  "status": "success",
+  "total": 3,
+  "success_count": 3,
+  "failed_count": 0,
+  "results": [
+    {
+      "product_id": "NB001",
+      "status": "success",
+      "preview_index": "output/NB001/cloud_preview/index.html",
+      "zip_file": "output/NB001/cloud_preview/NB001_cloud_preview.zip",
+      "images": [
+        "01_main_white.png",
+        "02_selling_points.png",
+        "03_flavor.png",
+        "04_ingredients.png",
+        "05_lifestyle.png",
+        "06_capacity.png",
+        "07_summary.png"
+      ]
+    }
+  ]
+}
+```
+
+顶层 `status`：
+- `success`：全部产品成功。
+- `partial_failed`：部分产品失败。
+- `error`：全部产品失败。
+
+每个产品自己的结果都在 `results` 中。
+
+## 6. 浏览器批量测试
+
+不用 n8n 时，可以直接打开：
+
+```text
+http://127.0.0.1:8899/generate-batch-test
+```
+
+它会固定生成：
+
+```text
+NB001
+NB002
+NB003
+```
+
+首页也有按钮：
+
+```text
+http://127.0.0.1:8899/
+```
+
+点击 `Generate Batch Test` 即可测试。
+
+## 7. 单产品接口仍可使用
+
+如果只生成一个产品，也可以继续调用：
+
+```text
+POST http://127.0.0.1:8899/generate
+```
+
+Body：
 
 ```json
 {
@@ -74,127 +171,81 @@ JSON Body：
 }
 ```
 
-## 5. 成功返回字段
+## 8. 如何回填 Google Sheets
 
-成功后接口会返回：
+批量接口返回的是一个 `results` 数组。
+
+如果当前 n8n 无法使用 Code 节点，可以先把完整返回 JSON 保存到表格的一列，例如：
+
+```text
+batch_result_json
+```
+
+后续 n8n 恢复 Code 节点后，再拆分：
+- `results[].product_id`
+- `results[].status`
+- `results[].preview_index`
+- `results[].zip_file`
+- `results[].message`
+
+如果使用 n8n 的 Item Lists / Split Out 工具可用，也可以把 `results` 拆成多条 item 后回填。
+
+## 9. 云端地址替换
+
+本地地址：
+
+```text
+http://127.0.0.1:8899/generate-batch
+```
+
+Zeabur 地址示例：
+
+```text
+https://你的域名/generate-batch
+```
+
+Zeabur 环境变量保持：
+
+```text
+HOST=0.0.0.0
+PORT=8080
+PYTHONUNBUFFERED=1
+```
+
+## 10. 常见报错
+
+### items 不是数组
+
+检查 JSON Body 是否写成：
 
 ```json
 {
-  "status": "success",
-  "product_id": "NB001",
-  "output_folder": "output/NB001",
-  "final_folder": "output/NB001/final",
-  "preview_folder": "output/NB001/cloud_preview",
-  "preview_index": "output/NB001/cloud_preview/index.html",
-  "zip_file": "output/NB001/cloud_preview/NB001_cloud_preview.zip",
-  "images": [
-    "01_main_white.png",
-    "02_selling_points.png",
-    "03_flavor.png",
-    "04_ingredients.png",
-    "05_lifestyle.png",
-    "06_capacity.png",
-    "07_summary.png"
-  ]
+  "items": []
 }
 ```
 
-关键字段说明：
+`items` 必须是数组，且至少 1 项。
 
-- `status`：是否成功。
-- `product_id`：产品 ID。
-- `output_folder`：产品输出根目录。
-- `final_folder`：最终 7 张图片目录。
-- `preview_folder`：静态预览页目录。
-- `preview_index`：本地预览 HTML 文件路径。
-- `zip_file`：云端预览压缩包路径。
-- `images`：最终图片文件名列表。
+### 某个产品失败
 
-## 6. 如何把 preview_index、zip_file 回填到表格
+批量接口不会中断整个任务，会在对应产品里返回：
 
-如果使用 Google Sheets，可以在 `HTTP Request` 后接一个 `Google Sheets` 节点。
-
-建议回填字段：
-
-```text
-product_id
-status
-preview_index
-zip_file
-final_folder
-preview_folder
+```json
+{
+  "product_id": "NB002",
+  "status": "error",
+  "message": "错误说明"
+}
 ```
 
-n8n 表达式示例：
+### n8n Docker 无法访问 127.0.0.1
 
-```text
-{{$json.product_id}}
-{{$json.status}}
-{{$json.preview_index}}
-{{$json.zip_file}}
-{{$json.final_folder}}
-{{$json.preview_folder}}
-```
-
-如果要把图片列表合并成一个字符串：
-
-```text
-{{$json.images.join(", ")}}
-```
-
-## 7. 后续如何改造成批量产品生成
-
-后续批量化可以按以下方向扩展：
-
-1. 从 Google Sheets 读取多行产品。
-2. 每一行包含 `product_id`、`csv`、`plan` 等字段。
-3. 用 `Split In Batches` 或 `Loop Over Items` 逐个调用 `/generate`。
-4. 根据返回的 `status` 判断是否成功。
-5. 将 `preview_index`、`zip_file` 和错误信息回填到对应行。
-
-当前本地服务 V1 先支持 `NB001`，后续可以扩展为多产品动态 plan。
-
-## 8. 常见报错排查
-
-### 连接失败
-
-现象：
-
-```text
-ECONNREFUSED
-```
-
-排查：
-
-- 确认 `python scripts/server_v1.py` 已启动。
-- 确认服务地址是 `http://127.0.0.1:8899`。
-- 确认 n8n 和 Python 服务在同一台机器上。
-
-### /health 不是 ok
-
-排查：
-
-- 重启 `server_v1.py`。
-- 检查终端是否有端口占用或 Python 报错。
-
-### /generate 返回 error
-
-排查：
-
-- 查看返回 JSON 的 `message` 字段。
-- 确认 `input/products/products_sample.csv` 存在。
-- 确认 `plans/NB001_product_plan.json` 存在且 JSON 可解析。
-- 确认 Pillow 已安装，因为图片合成需要 Pillow。
-- 确认 `input/images` 下有可用产品图。
-
-### n8n 在 Docker 里访问不到 127.0.0.1
-
-如果 n8n 在 Docker 容器里运行，`127.0.0.1` 指的是容器自己，不是 Windows 主机。
+如果 n8n 跑在 Docker 容器里，`127.0.0.1` 指的是 n8n 容器自己。
 
 可以尝试：
 
 ```text
-http://host.docker.internal:8899/generate
+http://host.docker.internal:8899/generate-batch
 ```
 
-或把 n8n 改成本机桌面版 / 本机进程运行。
+或者直接使用 Zeabur 公网地址。

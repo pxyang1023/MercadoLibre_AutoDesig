@@ -1,0 +1,4 @@
+product_id,product_name,category,language,market,selling_points,capacity,input_image,status
+NB001,NB Bebida de guayaba con ciruela,beverage,es,LatAm,"Sabor fresco a guayaba; Toque a ciruela dulce y ácido; Botella de 1L para compartir",1L,nb_bottle.jpg,pending
+NB002,Sierra japonesa de doble filo,tools,es,LatAm,"Hoja de doble filo; Mango cómodo; Corte preciso para madera; Diseño práctico para carpintería",1 pieza,saw.jpg,pending
+NB003,Organizador de cocina multifuncional,home,es,LatAm,"Ahorra espacio; Diseño resistente; Fácil de limpiar; Ideal para cocina y despensa",1 unidad,kitchen_organizer.jpg,pending

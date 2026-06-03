@@ -1,0 +1,4 @@
+base_url = https://ceshi2.zeabur.app
+product_id = NB001
+csv = input/products/products_sample.csv
+plan = plans/NB001_product_plan.json

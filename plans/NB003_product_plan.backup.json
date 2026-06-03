@@ -1,0 +1,98 @@
+{
+  "product_id": "NB003",
+  "product_name": "Organizador de cocina multifuncional",
+  "category": "home",
+  "language": "es",
+  "market": "LatAm",
+  "capacity": "1 unidad",
+  "input_image": "input/images/kitchen_organizer.jpg",
+  "output_folder": "output/NB003",
+  "selling_points": [
+    "Ahorra espacio",
+    "Diseño resistente",
+    "Fácil de limpiar",
+    "Ideal para cocina y despensa"
+  ],
+  "images": [
+    {
+      "index": 1,
+      "type": "main_white",
+      "filename": "01_main_white.png",
+      "title": "",
+      "subtitle": "",
+      "bullets": []
+    },
+    {
+      "index": 2,
+      "type": "selling_points",
+      "filename": "02_selling_points.png",
+      "title": "Organizador de cocina multifuncional",
+      "subtitle": "Características principales",
+      "bullets": [
+        "Ahorra espacio",
+        "Diseño resistente",
+        "Fácil de limpiar"
+      ]
+    },
+    {
+      "index": 3,
+      "type": "flavor",
+      "filename": "03_flavor.png",
+      "title": "Solución práctica para el hogar",
+      "subtitle": "Ahorra espacio",
+      "bullets": [
+        "Ahorra espacio",
+        "Diseño resistente",
+        "Fácil de limpiar"
+      ]
+    },
+    {
+      "index": 4,
+      "type": "ingredients",
+      "filename": "04_ingredients.png",
+      "title": "Detalles del producto",
+      "subtitle": "Características principales",
+      "bullets": [
+        "Diseño resistente",
+        "Fácil de limpiar",
+        "Ideal para cocina y despensa"
+      ]
+    },
+    {
+      "index": 5,
+      "type": "lifestyle",
+      "filename": "05_lifestyle.png",
+      "title": "Para usar en cualquier momento",
+      "subtitle": "Fácil de limpiar",
+      "bullets": [
+        "Diseño resistente",
+        "Fácil de limpiar",
+        "Ideal para cocina y despensa"
+      ]
+    },
+    {
+      "index": 6,
+      "type": "capacity",
+      "filename": "06_capacity.png",
+      "title": "1 unidad",
+      "subtitle": "Información del producto",
+      "bullets": [
+        "Diseño resistente",
+        "Fácil de limpiar",
+        "Ideal para cocina y despensa"
+      ]
+    },
+    {
+      "index": 7,
+      "type": "summary",
+      "filename": "07_summary.png",
+      "title": "Resumen del producto",
+      "subtitle": "Organizador de cocina multifuncional",
+      "bullets": [
+        "Ahorra espacio",
+        "Diseño resistente",
+        "Fácil de limpiar"
+      ]
+    }
+  ]
+}

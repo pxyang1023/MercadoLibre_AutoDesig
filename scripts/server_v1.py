@@ -25,6 +25,24 @@ SERVICE_NAME = "MercadoLibre AutoDesign Server V1"
 DEFAULT_PRODUCT_ID = "NB001"
 DEFAULT_CSV = "input/products/products_sample.csv"
 DEFAULT_PLAN = "plans/NB001_product_plan.json"
+DEFAULT_BATCH_CSV = "input/products/products_batch_sample.csv"
+DEFAULT_BATCH_ITEMS = [
+    {
+        "product_id": "NB001",
+        "csv": DEFAULT_BATCH_CSV,
+        "plan": "plans/NB001_product_plan.json",
+    },
+    {
+        "product_id": "NB002",
+        "csv": DEFAULT_BATCH_CSV,
+        "plan": "plans/NB002_product_plan.json",
+    },
+    {
+        "product_id": "NB003",
+        "csv": DEFAULT_BATCH_CSV,
+        "plan": "plans/NB003_product_plan.json",
+    },
+]
 FINAL_IMAGE_NAMES = [
     "01_main_white.png",
     "02_selling_points.png",
@@ -52,10 +70,9 @@ def resolve_project_path(path):
 
 
 def run_full_generation(request_data):
-    product_id = request_data.get("product_id", DEFAULT_PRODUCT_ID)
-    if product_id != DEFAULT_PRODUCT_ID:
-        raise RuntimeError("Server V1 currently supports only product_id NB001.")
-
+    product_id = str(request_data.get("product_id", DEFAULT_PRODUCT_ID)).strip()
+    if not product_id:
+        raise RuntimeError("product_id is required.")
     csv_path = request_data.get("csv", DEFAULT_CSV)
     plan_path = request_data.get("plan", DEFAULT_PLAN)
     copy_path = Path("output") / product_id / "copywriting_result.json"
@@ -89,6 +106,61 @@ def run_full_generation(request_data):
         "preview_index": to_project_relative(preview_index),
         "zip_file": to_project_relative(zip_file),
         "images": FINAL_IMAGE_NAMES,
+    }
+
+
+def build_batch_response(items):
+    if not isinstance(items, list) or not items:
+        raise RuntimeError("items must be a non-empty array.")
+
+    results = []
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            results.append(
+                {
+                    "product_id": "",
+                    "status": "error",
+                    "message": f"item {index} must be an object.",
+                }
+            )
+            continue
+
+        product_id = str(item.get("product_id", "")).strip()
+        try:
+            result = run_full_generation(item)
+            results.append(
+                {
+                    "product_id": result.get("product_id", product_id),
+                    "status": "success",
+                    "preview_index": result.get("preview_index", ""),
+                    "zip_file": result.get("zip_file", ""),
+                    "images": result.get("images", []),
+                }
+            )
+        except Exception as exc:
+            results.append(
+                {
+                    "product_id": product_id,
+                    "status": "error",
+                    "message": str(exc),
+                }
+            )
+
+    success_count = sum(1 for result in results if result.get("status") == "success")
+    failed_count = len(results) - success_count
+    if success_count == len(results):
+        status = "success"
+    elif success_count == 0:
+        status = "error"
+    else:
+        status = "partial_failed"
+
+    return {
+        "status": status,
+        "total": len(results),
+        "success_count": success_count,
+        "failed_count": failed_count,
+        "results": results,
     }
 
 
@@ -167,6 +239,7 @@ def build_home_html():
       <div class="buttons">
         <a class="button" href="/health">Health Check</a>
         <a class="button" href="/generate-test">Generate NB001</a>
+        <a class="button" href="/generate-batch-test">Generate Batch Test</a>
         {preview_link}
       </div>
       <h2>Available endpoints</h2>
@@ -174,10 +247,12 @@ def build_home_html():
         <li><code>GET /</code> Browser test panel.</li>
         <li><code>GET /health</code> Health check JSON.</li>
         <li><code>GET /generate-test</code> Browser-only test endpoint for NB001.</li>
+        <li><code>GET /generate-batch-test</code> Browser-only batch test endpoint for NB001, NB002, and NB003.</li>
         <li><code>GET /preview_manifest</code> Returns preview manifest JSON if generated.</li>
         <li><code>POST /generate</code> Official API endpoint for n8n and automation.</li>
+        <li><code>POST /generate-batch</code> Official batch API endpoint for n8n and automation.</li>
       </ul>
-      <p><strong>Note:</strong> <code>/generate</code> is the formal POST API. <code>/generate-test</code> is only for browser testing.</p>
+      <p><strong>Note:</strong> <code>/generate</code> and <code>/generate-batch</code> are formal POST APIs. Test endpoints are only for browser testing.</p>
     </section>
   </main>
 </body>
@@ -263,6 +338,118 @@ def build_generate_test_html(result):
 </html>"""
 
 
+def build_generate_batch_test_html(result):
+    json_block = escape(json.dumps(result, ensure_ascii=False, indent=2))
+    rows = []
+    for item in result.get("results", []):
+        rows.append(
+            f"""
+            <tr>
+              <td>{escape(item.get("product_id", ""))}</td>
+              <td><strong>{escape(item.get("status", ""))}</strong></td>
+              <td>{escape(item.get("preview_index", ""))}</td>
+              <td>{escape(item.get("zip_file", ""))}</td>
+              <td>{escape(item.get("message", ""))}</td>
+            </tr>
+            """
+        )
+    rows_html = "\n".join(rows)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generate Batch Test Result</title>
+  <style>
+    body {{
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f6f8;
+      color: #0f172a;
+    }}
+    main {{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 36px 22px;
+    }}
+    section {{
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, .08);
+      padding: 26px;
+    }}
+    h1 {{ color: #075985; margin-top: 0; }}
+    .summary {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }}
+    .summary div {{
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+    }}
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+    }}
+    th, td {{
+      border-bottom: 1px solid #e2e8f0;
+      padding: 12px 8px;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }}
+    th {{ color: #475569; background: #f8fafc; }}
+    pre {{
+      white-space: pre-wrap;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 12px;
+      padding: 16px;
+      overflow: auto;
+    }}
+    a {{
+      color: #007f8a;
+      font-weight: 700;
+    }}
+  </style>
+</head>
+<body>
+  <main>
+    <section>
+      <h1>Generate Batch Test Result</h1>
+      <p><a href="/">Back to test panel</a></p>
+      <div class="summary">
+        <div><strong>total</strong><br>{result.get("total", 0)}</div>
+        <div><strong>success_count</strong><br>{result.get("success_count", 0)}</div>
+        <div><strong>failed_count</strong><br>{result.get("failed_count", 0)}</div>
+        <div><strong>status</strong><br>{escape(result.get("status", ""))}</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>product_id</th>
+            <th>status</th>
+            <th>preview_index</th>
+            <th>zip_file</th>
+            <th>message</th>
+          </tr>
+        </thead>
+        <tbody>{rows_html}</tbody>
+      </table>
+      <h2>Raw JSON</h2>
+      <pre>{json_block}</pre>
+    </section>
+  </main>
+</body>
+</html>"""
+
+
 class ServerV1Handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, payload):
         body = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
@@ -312,6 +499,11 @@ class ServerV1Handler(BaseHTTPRequestHandler):
                 self._send_html(500, f"<h1>Unexpected error</h1><p>{escape(str(exc))}</p><p><a href='/'>Back</a></p>")
             return
 
+        if path == "/generate-batch-test":
+            result = build_batch_response(DEFAULT_BATCH_ITEMS)
+            self._send_html(200, build_generate_batch_test_html(result))
+            return
+
         if path == "/preview_manifest":
             manifest_path = PROJECT_ROOT / "output" / DEFAULT_PRODUCT_ID / "cloud_preview" / "preview_manifest.json"
             if not manifest_path.exists():
@@ -340,17 +532,18 @@ class ServerV1Handler(BaseHTTPRequestHandler):
             404,
             {
                 "status": "error",
-                "message": "Not found. Available endpoints: GET /, GET /health, GET /generate-test, GET /preview_manifest, POST /generate",
+                "message": "Not found. Available endpoints: GET /, GET /health, GET /generate-test, GET /generate-batch-test, GET /preview_manifest, POST /generate, POST /generate-batch",
             },
         )
 
     def do_POST(self):
-        if self.path != "/generate":
+        path = urlparse(self.path).path
+        if path not in {"/generate", "/generate-batch"}:
             self._send_json(
                 404,
                 {
                     "status": "error",
-                    "message": "Not found. Available endpoint: POST /generate",
+                    "message": "Not found. Available endpoints: POST /generate, POST /generate-batch",
                 },
             )
             return
@@ -359,7 +552,10 @@ class ServerV1Handler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get("Content-Length", "0"))
             raw_body = self.rfile.read(content_length).decode("utf-8") if content_length else "{}"
             request_data = json.loads(raw_body)
-            response = run_full_generation(request_data)
+            if path == "/generate-batch":
+                response = build_batch_response(request_data.get("items"))
+            else:
+                response = run_full_generation(request_data)
             self._send_json(200, response)
         except json.JSONDecodeError:
             self._send_json(
@@ -370,8 +566,9 @@ class ServerV1Handler(BaseHTTPRequestHandler):
                 },
             )
         except RuntimeError as exc:
+            status_code = 400 if path == "/generate-batch" else 500
             self._send_json(
-                500,
+                status_code,
                 {
                     "status": "error",
                     "message": str(exc),
