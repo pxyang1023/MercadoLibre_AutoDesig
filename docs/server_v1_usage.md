@@ -29,6 +29,8 @@ MercadoLibre AutoDesign Server V1 started at http://127.0.0.1:8899
 
 ## 3. 如何测试 /health
 
+### 浏览器方式
+
 浏览器打开：
 
 ```text
@@ -50,6 +52,26 @@ Invoke-RestMethod -Uri http://127.0.0.1:8899/health -Method GET
 }
 ```
 
+## 3.1 浏览器测试面板
+
+现在可以直接用浏览器打开首页：
+
+```text
+http://127.0.0.1:8899/
+```
+
+首页包含：
+
+- `Health Check`：跳转到 `/health`
+- `Generate NB001`：跳转到 `/generate-test`
+- `Preview Manifest`：如果已生成预览包，则跳转到 `/preview_manifest`
+
+说明：
+
+- `/generate` 是正式 POST 接口，给 n8n 和自动化流程使用。
+- `/generate-test` 是浏览器测试接口，会用固定参数生成 NB001。
+- 这样测试 Zeabur 服务时不需要 Postman，也不需要 curl。
+
 ## 4. 如何测试 /generate
 
 PowerShell 示例：
@@ -70,6 +92,42 @@ Invoke-RestMethod `
   "csv": "input/products/products_sample.csv",
   "plan": "plans/NB001_product_plan.json"
 }
+```
+
+### 浏览器方式测试生成
+
+打开：
+
+```text
+http://127.0.0.1:8899/generate-test
+```
+
+它会使用固定请求：
+
+```json
+{
+  "product_id": "NB001",
+  "csv": "input/products/products_sample.csv",
+  "plan": "plans/NB001_product_plan.json"
+}
+```
+
+成功后页面会显示：
+
+- `status`
+- `product_id`
+- `final_folder`
+- `preview_folder`
+- `zip_file`
+- `images`
+- 原始 JSON 内容
+
+Zeabur 云端测试时，把域名换成你的 Zeabur 域名即可：
+
+```text
+https://你的-zeabur-域名/
+https://你的-zeabur-域名/generate-test
+https://你的-zeabur-域名/preview_manifest
 ```
 
 ## 5. 本地生成结果在哪里

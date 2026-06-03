@@ -1,0 +1,127 @@
+{
+  "product_id": "NB001",
+  "product_name": "NB Bebida de guayaba con ciruela",
+  "category": "beverage",
+  "language": "es",
+  "market": "LatAm",
+  "capacity": "1L",
+  "input_image": "input/images/inputimagesnb_bottle.jpg",
+  "output_folder": "output/NB001",
+  "brand_style": {
+    "main_colors": [
+      "#00A6B4",
+      "#FFFFFF",
+      "#FFD35A"
+    ],
+    "tone": "fresh, summer, clean, commercial"
+  },
+  "images": [
+    {
+      "index": 1,
+      "type": "main_white",
+      "filename": "01_main_white.png",
+      "title": "",
+      "subtitle": "",
+      "bullets": [],
+      "layout": "center_product_white_background",
+      "comfy_prompt": "professional product photography, bottled guava tea drink, single bottle centered, pure white background, clean studio lighting, realistic packaging, preserve original label design, preserve printed label, sharp details, high quality, commercial e-commerce product photo, premium beverage bottle, soft natural shadow, clean composition, front view"
+    },
+    {
+      "index": 2,
+      "type": "selling_points",
+      "filename": "02_selling_points.png",
+      "title": "NB Bebida de guayaba con ciruela 1L Bebida Refrescante",
+      "subtitle": "Sabor fresco para compartir",
+      "bullets": [
+        "Sabor fresco a guayaba",
+        "Toque a ciruela dulce y ácido",
+        "Botella de 1L para compartir"
+      ],
+      "layout": "product_left_text_right",
+      "comfy_prompt": "clean e-commerce promotional background, blue and teal gradient, abstract fresh summer design, subtle water splash, light fruit flavor atmosphere, modern commercial layout, premium style, minimal, empty space for product details, no readable text, no people"
+    },
+    {
+      "index": 3,
+      "type": "flavor",
+      "filename": "03_flavor.png",
+      "title": "Sabor fresco y refrescante",
+      "subtitle": "Sabor fresco a guayaba",
+      "bullets": [
+        "Sabor fresco a guayaba",
+        "Toque a ciruela dulce y ácido",
+        "Botella de 1L para compartir"
+      ],
+      "layout": "background_full_text_card",
+      "comfy_prompt": "refreshing guava plum tea flavor image, close up of guava fruit, plum fruit, ice cubes and water splash, fresh sweet and sour taste concept, blue teal summer background, premium beverage detail image, bright clean commercial style, no readable text"
+    },
+    {
+      "index": 4,
+      "type": "ingredients",
+      "filename": "04_ingredients.png",
+      "title": "Detalles del producto",
+      "subtitle": "Características principales",
+      "bullets": [
+        "Toque a ciruela dulce y ácido",
+        "Botella de 1L para compartir",
+        "Sabor fresco y agradable para disfrutar en frio"
+      ],
+      "layout": "ingredient_showcase",
+      "comfy_prompt": "premium ingredient display for guava plum tea drink, fresh guava slices, plum fruit, tea leaves, water droplets, ice cubes, bright natural style, clean e-commerce detail image, blue green fresh background, no readable text"
+    },
+    {
+      "index": 5,
+      "type": "lifestyle",
+      "filename": "05_lifestyle.png",
+      "title": "Para disfrutar en cualquier momento",
+      "subtitle": "Sabor fresco y agradable para disfrutar en frio",
+      "bullets": [
+        "Botella de 1L para compartir",
+        "Sabor fresco y agradable para disfrutar en frio",
+        "Presentacion de 1L practica para compartir"
+      ],
+      "layout": "lifestyle_scene",
+      "comfy_prompt": "summer beverage lifestyle scene, refreshing fruit tea atmosphere, picnic and sharing mood, bright daylight, fresh blue green tone, guava and plum accents, commercial e-commerce detail image, no readable text"
+    },
+    {
+      "index": 6,
+      "type": "capacity",
+      "filename": "06_capacity.png",
+      "title": "Botella de 1L",
+      "subtitle": "Más contenido para compartir",
+      "bullets": [
+        "Botella de 1L para compartir",
+        "Sabor fresco y agradable para disfrutar en frio",
+        "Presentacion de 1L practica para compartir"
+      ],
+      "layout": "capacity_highlight",
+      "comfy_prompt": "large capacity beverage concept, 1 liter sharing drink atmosphere, clean commercial background, fresh summer beverage style, blue teal gradient, water splash, bright premium e-commerce detail image, empty space for capacity information, no readable text"
+    },
+    {
+      "index": 7,
+      "type": "summary",
+      "filename": "07_summary.png",
+      "title": "Frescura, sabor y practicidad",
+      "subtitle": "NB Bebida de guayaba con ciruela 1L Bebida Refrescante",
+      "bullets": [
+        "Sabor fresco a guayaba",
+        "Toque a ciruela dulce y ácido",
+        "Botella de 1L para compartir"
+      ],
+      "layout": "benefit_summary",
+      "comfy_prompt": "premium beverage summary background, refreshing guava plum tea concept, blue teal summer design, fruit accents, ice cubes, water splash, clean modern e-commerce detail page style, space for product benefits, no readable text"
+    }
+  ],
+  "copywriting": {
+    "new_title": "NB Bebida de guayaba con ciruela 1L Bebida Refrescante",
+    "five_bullets": [
+      "Sabor fresco a guayaba",
+      "Toque a ciruela dulce y ácido",
+      "Botella de 1L para compartir",
+      "Sabor fresco y agradable para disfrutar en frio",
+      "Presentacion de 1L practica para compartir"
+    ],
+    "background_keywords": "nb, bebida, guayaba, ciruela, beverage, 1l, sabor, fresco, toque, dulce, ácido, botella, compartir, agradable, disfrutar, frio, presentacion, practica, refrescante, latam",
+    "qc_result": "pass",
+    "problem_note": "无问题"
+  }
+}

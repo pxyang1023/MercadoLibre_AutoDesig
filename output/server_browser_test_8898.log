@@ -1,0 +1,85 @@
+MercadoLibre AutoDesign Server V1 started at http://127.0.0.1:8898
+127.0.0.1 - "GET / HTTP/1.1" 200 -
+127.0.0.1 - "GET /health HTTP/1.1" 200 -
+127.0.0.1 - "GET /preview_manifest HTTP/1.1" 200 -
+generate request: product_id=NB001 csv=input/products/products_sample.csv plan=plans/NB001_product_plan.json
+copywriting_result: D:\ai\MercadoLibre_AutoDesign\output\NB001\copywriting_result.json
+new_title: NB Bebida de guayaba con ciruela 1L Bebida Refrescante
+qc_result: pass
+step copywriting complete: 1 result(s)
+copywriting_result: D:\ai\MercadoLibre_AutoDesign\output\NB001\copywriting_result.json
+product_plan: D:\ai\MercadoLibre_AutoDesign\plans\NB001_product_plan.json
+backup: D:\ai\MercadoLibre_AutoDesign\plans\NB001_product_plan.backup_20260603_155400.json
+qc_result: pass
+updated image indexes: 1, 2, 3, 4, 5, 6, 7
+apply copywriting to plan success
+step apply copywriting complete: D:\ai\MercadoLibre_AutoDesign\plans\NB001_product_plan.json
+plan_path: D:\ai\MercadoLibre_AutoDesign\plans\NB001_product_plan.json
+output_folder: D:\ai\MercadoLibre_AutoDesign\output\NB001
+input_image: input/images/inputimagesnb_bottle.jpg
+configured product image: input/images/inputimagesnb_bottle.jpg
+resolved product image path: D:\ai\MercadoLibre_AutoDesign\input\images\inputimagesnb_bottle.jpg
+product image found: D:\ai\MercadoLibre_AutoDesign\input\images\inputimagesnb_bottle.jpg
+provider: openai
+assets_dir: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_01_main_white.png
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_02_selling_points.png
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_03_flavor.png
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_04_ingredients.png
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_05_lifestyle.png
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_06_capacity.png
+asset_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_07_summary.png
+final_dir: D:\ai\MercadoLibre_AutoDesign\output\NB001\final
+configured product image: input/images/inputimagesnb_bottle.jpg
+resolved product image path: D:\ai\MercadoLibre_AutoDesign\input\images\inputimagesnb_bottle.jpg
+product image found: D:\ai\MercadoLibre_AutoDesign\input\images\inputimagesnb_bottle.jpg
+product image trimmed: original=1254x1254 cropped=381x1254
+compose debug: index=1 type=main_white title='' bullets=0 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\01_main_white.png
+using asset background: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_02_selling_points.png
+layout debug: image 2 title_font=44 product_height_target=470
+compose debug: index=2 type=selling_points title='NB Bebida de guayaba con ciruela 1L Bebida Refrescante' bullets=3 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\02_selling_points.png
+using asset background: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_03_flavor.png
+compose debug: index=3 type=flavor title='Sabor fresco y refrescante' bullets=3 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\03_flavor.png
+using asset background: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_04_ingredients.png
+compose debug: index=4 type=ingredients title='Detalles del producto' bullets=3 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\04_ingredients.png
+using asset background: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_05_lifestyle.png
+compose debug: index=5 type=lifestyle title='Para disfrutar en cualquier momento' bullets=3 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\05_lifestyle.png
+using asset background: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_06_capacity.png
+compose debug: index=6 type=capacity title='Botella de 1L' bullets=3 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\06_capacity.png
+using asset background: D:\ai\MercadoLibre_AutoDesign\output\NB001\assets\asset_07_summary.png
+compose debug: index=7 type=summary title='Frescura, sabor y practicidad' bullets=3 product_loaded=True output=D:\ai\MercadoLibre_AutoDesign\output\NB001\final\07_summary.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\01_main_white.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\02_selling_points.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\03_flavor.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\04_ingredients.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\05_lifestyle.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\06_capacity.png
+final_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\final\07_summary.png
+manifest_generated: D:\ai\MercadoLibre_AutoDesign\output\NB001\manifest.json
+
+summary:
+- provider: openai
+- product_id: NB001
+- assets_generated: 7
+- final_generated: 7
+- output_folder: D:\ai\MercadoLibre_AutoDesign\output\NB001
+- manifest: D:\ai\MercadoLibre_AutoDesign\output\NB001\manifest.json
+step image pipeline complete: D:\ai\MercadoLibre_AutoDesign\output\NB001
+copied: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\copywriting_result.json
+copied: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\manifest.json
+cloud_preview_dir: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview
+index_html: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\index.html
+images_dir: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\01_main_white.png
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\02_selling_points.png
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\03_flavor.png
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\04_ingredients.png
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\05_lifestyle.png
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\06_capacity.png
+image: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\images\07_summary.png
+preview_manifest: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\preview_manifest.json
+zip: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview\NB001_cloud_preview.zip
+export cloud preview success
+step cloud preview export complete: D:\ai\MercadoLibre_AutoDesign\output\NB001\cloud_preview
+127.0.0.1 - "GET /generate-test HTTP/1.1" 200 -
+127.0.0.1 - "GET / HTTP/1.1" 200 -
