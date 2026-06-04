@@ -1,0 +1,150 @@
+{
+  "name": "MercadoLibre Batch Generate V1",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      product_id: \"NB001\",\n      csv: \"/app/data/products.csv\",\n      plan: \"/app/plans/NB001_product_plan.json\",\n      base_url: \"https://dianshang.zeabur.app\"\n    }\n  },\n  {\n    json: {\n      product_id: \"NB002\",\n      csv: \"/app/data/products.csv\",\n      plan: \"/app/plans/NB002_product_plan.json\",\n      base_url: \"https://dianshang.zeabur.app\"\n    }\n  },\n  {\n    json: {\n      product_id: \"NB003\",\n      csv: \"/app/data/products.csv\",\n      plan: \"/app/plans/NB003_product_plan.json\",\n      base_url: \"https://dianshang.zeabur.app\"\n    }\n  }\n];"
+      },
+      "id": "batch-products",
+      "name": "批量产品",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dianshang.zeabur.app/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"product_id\": $json.product_id,\n  \"csv\": $json.csv,\n  \"plan\": $json.plan\n}"
+      },
+      "id": "generate-images",
+      "name": "生成图片",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const data = item.json;\n\n  return {\n    json: {\n      product_id: data.product_id || data.request?.product_id || data.input?.product_id || \"unknown\",\n      status: data.status || \"unknown\",\n      message: data.message || \"\",\n      image_url: data.image_url || data.output_url || data.url || data.result?.image_url || \"\",\n      raw: data\n    }\n  };\n});"
+      },
+      "id": "format-results",
+      "name": "整理结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/REPLACE_WITH_YOUR_WEBHOOK",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"msg_type\": \"text\",\n  \"content\": {\n    \"text\": \"MercadoLibre 批量生成完成\\n产品ID：\" + $json.product_id + \"\\n状态：\" + $json.status + \"\\n图片：\" + $json.image_url + \"\\n信息：\" + $json.message\n  }\n}"
+      },
+      "id": "feishu-notification",
+      "name": "飞书通知",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "批量产品",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "批量产品": {
+      "main": [
+        [
+          {
+            "node": "生成图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成图片": {
+      "main": [
+        [
+          {
+            "node": "整理结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理结果": {
+      "main": [
+        [
+          {
+            "node": "飞书通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "mercadolibre-batch-generate-v1",
+  "triggerCount": 0,
+  "tags": []
+}
