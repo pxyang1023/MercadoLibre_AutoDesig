@@ -125,6 +125,77 @@ output/{product_id}/openai_pack_v2/visual_analysis.json
 
 ## 5. OpenAI 图片包生成接口
 
+### 异步提交接口，推荐 n8n 使用
+
+```text
+POST /submit_openai_image_pack_job
+```
+
+请求体与 `/generate_openai_image_pack` 一致。
+
+接口会立即返回：
+
+```json
+{
+  "status": "accepted",
+  "job_id": "job_...",
+  "status_url": "/job_status/job_...",
+  "result_url": "/job_result/job_..."
+}
+```
+
+任务文件保存到：
+
+```text
+output/jobs/{job_id}/job.json
+output/jobs/{job_id}/status.json
+output/jobs/{job_id}/result.json
+```
+
+状态查询：
+
+```text
+GET /job_status/{job_id}
+```
+
+状态值：
+
+- `queued`
+- `running`
+- `succeeded`
+- `failed`
+
+`progress` 范围是 `0-100`。
+
+`message` 会显示当前阶段：
+
+- `analyzing`
+- `prompt_generating`
+- `main_image_generating`
+- `detail_images_generating`
+- `packaging`
+- `done`
+
+结果查询：
+
+```text
+GET /job_result/{job_id}
+```
+
+如果任务未完成，会返回：
+
+```json
+{
+  "status": "running",
+  "job_id": "job_...",
+  "message": "任务未完成"
+}
+```
+
+如果任务成功，会返回最终图片包结果。
+
+### 同步测试接口，保留给本地调试
+
 ```text
 POST /generate_openai_image_pack
 ```

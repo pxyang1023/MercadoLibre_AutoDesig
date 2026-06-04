@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from html import escape
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -329,7 +329,15 @@ def render_preview_html(request_data: dict[str, Any], output_dir: Path, result: 
     (output_dir / "preview.html").write_text(html, encoding="utf-8")
 
 
-def run_openai_image_pack(request_data: dict[str, Any]) -> dict[str, Any]:
+StatusCallback = Callable[[str, int, str], None]
+
+
+def run_openai_image_pack(request_data: dict[str, Any], status_callback: StatusCallback | None = None) -> dict[str, Any]:
+    def update(status: str, progress: int, message: str) -> None:
+        if status_callback:
+            status_callback(status, progress, message)
+
+    update("running", 5, "analyzing")
     api_key = require_api_key()
     if not request_data.get("source_images") and request_data.get("uploaded_images"):
         request_data["source_images"] = request_data.get("uploaded_images")
@@ -346,26 +354,32 @@ def run_openai_image_pack(request_data: dict[str, Any]) -> dict[str, Any]:
         if analysis_path.exists():
             request_data["visual_analysis"] = json.loads(analysis_path.read_text(encoding="utf-8")).get("visual_analysis", {})
 
+    update("running", 20, "prompt_generating")
     planner = call_prompt_planner(request_data, api_key)
     prompt_pack = merge_prompt_pack(planner["prompt_pack"], request_data.get("manual_override") or {}, count)
     planner["prompt_pack"] = prompt_pack
     write_json(output_dir / "product_analysis.json", planner)
 
+    update("running", 35, "main_image_generating")
     prefix = f"Product title: {request_data.get('title', '')}. Keywords: {request_data.get('keywords', '')}. Preserve product identity from references. "
     main_path = output_dir / "main_image.png"
     generate_image(prefix + prompt_pack["main_image_prompt"], main_path, api_key, True)
 
+    update("running", 45, "detail_images_generating")
     es_paths: list[str] = []
     for index, prompt in enumerate(prompt_pack["detail_prompts_es"], start=1):
         path = output_dir / f"detail_es_{index:02d}.png"
         generate_image(prefix + prompt, path, api_key)
         es_paths.append(project_relative(path))
+        update("running", min(65, 45 + int(index * 20 / max(1, count))), "detail_images_generating")
     pt_paths: list[str] = []
     for index, prompt in enumerate(prompt_pack["detail_prompts_pt"], start=1):
         path = output_dir / f"detail_pt_{index:02d}.png"
         generate_image(prefix + prompt, path, api_key)
         pt_paths.append(project_relative(path))
+        update("running", min(85, 65 + int(index * 20 / max(1, count))), "detail_images_generating")
 
+    update("running", 90, "packaging")
     result = {
         "status": "success",
         "product_id": product_id,
@@ -375,6 +389,7 @@ def run_openai_image_pack(request_data: dict[str, Any]) -> dict[str, Any]:
         "preview_url": project_relative(output_dir / "preview.html"),
         "listing_ready_url": project_relative(output_dir / "listing_ready.json"),
         "manifest_url": project_relative(output_dir / "preview_manifest.json"),
+        "output_folder": project_relative(output_dir),
         "manual_review_required": True,
     }
     listing = {

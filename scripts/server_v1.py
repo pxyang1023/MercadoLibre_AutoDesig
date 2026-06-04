@@ -3,6 +3,10 @@ import os
 import sys
 import mimetypes
 import re
+import threading
+import time
+import traceback
+import uuid
 from email import policy
 from email.parser import BytesParser
 from html import escape
@@ -59,6 +63,7 @@ FINAL_IMAGE_NAMES = [
     "07_summary.png",
 ]
 ALLOWED_UPLOAD_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+JOBS_DIR = PROJECT_ROOT / "output" / "jobs"
 
 
 def safe_name(value):
@@ -99,6 +104,78 @@ def file_response_path(url_path):
     if not str(candidate).startswith(str(root)):
         raise RuntimeError("Invalid file path.")
     return candidate
+
+
+def safe_job_id(job_id):
+    job_id = str(job_id or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{8,80}", job_id):
+        raise RuntimeError("Invalid job_id.")
+    return job_id
+
+
+def job_dir(job_id):
+    return JOBS_DIR / safe_job_id(job_id)
+
+
+def read_json_file(path):
+    with path.open("r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+def write_json_file(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=2)
+
+
+def write_job_status(job_id, status, progress, message, **extra):
+    payload = {
+        "job_id": job_id,
+        "status": status,
+        "progress": max(0, min(100, int(progress))),
+        "message": message,
+    }
+    payload.update(extra)
+    write_json_file(job_dir(job_id) / "status.json", payload)
+    return payload
+
+
+def run_openai_image_pack_job(job_id):
+    try:
+        request_data = read_json_file(job_dir(job_id) / "job.json")
+
+        def update(status, progress, message):
+            write_job_status(job_id, status, progress, message)
+
+        write_job_status(job_id, "running", 1, "analyzing")
+        result = run_openai_image_pack(request_data, status_callback=update)
+        result["job_id"] = job_id
+        write_json_file(job_dir(job_id) / "result.json", result)
+        write_job_status(job_id, "succeeded", 100, "done")
+    except Exception as exc:
+        write_job_status(
+            job_id,
+            "failed",
+            100,
+            "failed",
+            error_message=str(exc),
+            traceback=traceback.format_exc(),
+        )
+
+
+def submit_openai_image_pack_job(request_data):
+    job_id = f"job_{time.strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:12]}"
+    directory = job_dir(job_id)
+    directory.mkdir(parents=True, exist_ok=True)
+    write_json_file(directory / "job.json", request_data)
+    write_job_status(job_id, "queued", 0, "任务已创建")
+    threading.Thread(target=run_openai_image_pack_job, args=(job_id,), daemon=True).start()
+    return {
+        "status": "accepted",
+        "job_id": job_id,
+        "status_url": f"/job_status/{job_id}",
+        "result_url": f"/job_result/{job_id}",
+    }
 
 
 def run_full_generation(request_data):
@@ -346,11 +423,14 @@ def build_home_html():
         <li><code>GET /generate-batch-test</code> Browser-only batch test endpoint for NB001, NB002, and NB003.</li>
         <li><code>GET /preview_manifest</code> Returns preview manifest JSON if generated.</li>
         <li><code>GET /files/{path}</code> Serves generated and uploaded files for browser/n8n access.</li>
+        <li><code>GET /job_status/{job_id}</code> Returns async OpenAI image pack job status.</li>
+        <li><code>GET /job_result/{job_id}</code> Returns async OpenAI image pack job result.</li>
         <li><code>POST /upload_source_images</code> Upload 1-5 source product images.</li>
         <li><code>POST /analyze_source_images</code> Analyze source images with OpenAI multimodal model.</li>
         <li><code>POST /generate</code> Official API endpoint for n8n and automation.</li>
         <li><code>POST /generate-batch</code> Official batch API endpoint for n8n and automation.</li>
         <li><code>POST /generate_openai_image_pack</code> OpenAI image pack V2 endpoint.</li>
+        <li><code>POST /submit_openai_image_pack_job</code> Async OpenAI image pack V2 job endpoint.</li>
       </ul>
       <p><strong>Note:</strong> <code>/generate</code> and <code>/generate-batch</code> are formal POST APIs. Test endpoints are only for browser testing.</p>
     </section>
@@ -589,6 +669,46 @@ class ServerV1Handler(BaseHTTPRequestHandler):
                 self._send_json(400, {"status": "error", "message": str(exc)})
             return
 
+        if path.startswith("/job_status/"):
+            try:
+                job_id = safe_job_id(path.removeprefix("/job_status/"))
+                status_path = job_dir(job_id) / "status.json"
+                if not status_path.exists():
+                    self._send_json(404, {"status": "error", "message": "job not found"})
+                    return
+                self._send_json(200, read_json_file(status_path))
+            except RuntimeError as exc:
+                self._send_json(400, {"status": "error", "message": str(exc)})
+            return
+
+        if path.startswith("/job_result/"):
+            try:
+                job_id = safe_job_id(path.removeprefix("/job_result/"))
+                directory = job_dir(job_id)
+                status_path = directory / "status.json"
+                result_path = directory / "result.json"
+                if not status_path.exists():
+                    self._send_json(404, {"status": "error", "message": "job not found"})
+                    return
+                status_data = read_json_file(status_path)
+                if status_data.get("status") == "failed":
+                    self._send_json(200, status_data)
+                    return
+                if status_data.get("status") != "succeeded" or not result_path.exists():
+                    self._send_json(
+                        200,
+                        {
+                            "status": "running",
+                            "job_id": job_id,
+                            "message": "任务未完成",
+                        },
+                    )
+                    return
+                self._send_json(200, read_json_file(result_path))
+            except RuntimeError as exc:
+                self._send_json(400, {"status": "error", "message": str(exc)})
+            return
+
         if path == "/health":
             self._send_json(
                 200,
@@ -648,18 +768,18 @@ class ServerV1Handler(BaseHTTPRequestHandler):
             404,
             {
                 "status": "error",
-                "message": "Not found. Available endpoints: GET /, GET /health, GET /generate-test, GET /generate-batch-test, GET /preview_manifest, GET /files/{path}, POST /upload_source_images, POST /analyze_source_images, POST /generate, POST /generate-batch, POST /generate_openai_image_pack",
+                "message": "Not found. Available endpoints: GET /, GET /health, GET /generate-test, GET /generate-batch-test, GET /preview_manifest, GET /files/{path}, GET /job_status/{job_id}, GET /job_result/{job_id}, POST /upload_source_images, POST /analyze_source_images, POST /generate, POST /generate-batch, POST /generate_openai_image_pack, POST /submit_openai_image_pack_job",
             },
         )
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path not in {"/generate", "/generate-batch", "/generate_openai_image_pack", "/upload_source_images", "/analyze_source_images"}:
+        if path not in {"/generate", "/generate-batch", "/generate_openai_image_pack", "/submit_openai_image_pack_job", "/upload_source_images", "/analyze_source_images"}:
             self._send_json(
                 404,
                 {
                     "status": "error",
-                    "message": "Not found. Available endpoints: POST /upload_source_images, POST /analyze_source_images, POST /generate, POST /generate-batch, POST /generate_openai_image_pack",
+                    "message": "Not found. Available endpoints: POST /upload_source_images, POST /analyze_source_images, POST /generate, POST /generate-batch, POST /generate_openai_image_pack, POST /submit_openai_image_pack_job",
                 },
             )
             return
@@ -673,7 +793,9 @@ class ServerV1Handler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get("Content-Length", "0"))
             raw_body = self.rfile.read(content_length).decode("utf-8") if content_length else "{}"
             request_data = json.loads(raw_body)
-            if path == "/analyze_source_images":
+            if path == "/submit_openai_image_pack_job":
+                response = submit_openai_image_pack_job(request_data)
+            elif path == "/analyze_source_images":
                 response = analyze_source_images(request_data)
             elif path == "/generate_openai_image_pack":
                 response = run_openai_image_pack(request_data)
@@ -691,7 +813,7 @@ class ServerV1Handler(BaseHTTPRequestHandler):
                 },
             )
         except RuntimeError as exc:
-            status_code = 400 if path in {"/generate-batch", "/generate_openai_image_pack", "/upload_source_images", "/analyze_source_images"} else 500
+            status_code = 400 if path in {"/generate-batch", "/generate_openai_image_pack", "/submit_openai_image_pack_job", "/upload_source_images", "/analyze_source_images"} else 500
             self._send_json(
                 status_code,
                 {

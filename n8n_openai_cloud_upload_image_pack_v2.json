@@ -93,7 +93,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dianshang.zeabur.app/generate_openai_image_pack",
+        "url": "https://dianshang.zeabur.app/submit_openai_image_pack_job",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -109,7 +109,7 @@
         "jsonBody": "={\n  \"product_id\": $json.product_id,\n  \"title\": $json.title,\n  \"keywords\": $json.keywords,\n  \"target_country\": $json.target_country,\n  \"source_images\": $json.source_images,\n  \"visual_analysis\": $json.visual_analysis,\n  \"detail_count_per_language\": $json.detail_count_per_language,\n  \"manual_override\": $json.manual_override,\n  \"output_options\": $json.output_options\n}"
       },
       "id": "generate-openai-pack",
-      "name": "OpenAI图片包生成",
+      "name": "??OpenAI?????",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -119,7 +119,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      product_id: item.json.product_id,\n      status: item.json.status,\n      preview_url: item.json.preview_url,\n      listing_ready_json: item.json.listing_ready_url,\n      manifest_url: item.json.manifest_url,\n      main_image_url: item.json.main_image_url,\n      detail_images_es: item.json.detail_images_es || [],\n      detail_images_pt: item.json.detail_images_pt || [],\n      raw: item.json\n    }\n  };\n});"
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      product_id: item.json.product_id || \"\",\n      status: item.json.status,\n      job_id: item.json.job_id || \"\",\n      status_url: item.json.status_url || \"\",\n      result_url: item.json.result_url || \"\",\n      message: item.json.message || \"?????????? status_url ? result_url ?????\",\n      raw: item.json\n    }\n  };\n});"
       },
       "id": "format-results",
       "name": "整理结果",
@@ -132,7 +132,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      ...item.json,\n      preview_and_listing_placeholder: {\n        preview_url: item.json.preview_url || \"\",\n        listing_ready_json: item.json.listing_ready_json || \"\",\n        note: \"对比预览和上架预留占位，暂不调用 MercadoLibre API。\"\n      }\n    }\n  };\n});"
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      ...item.json,\n      preview_and_listing_placeholder: {\n        status_url: item.json.status_url || \"\",\n        result_url: item.json.result_url || \"\",\n        note: \"??????????? status_url?????? result_url ?? preview_url ? listing_ready_url?\"\n      }\n    }\n  };\n});"
       },
       "id": "preview-listing-placeholder",
       "name": "对比预览和上架预留",
@@ -159,7 +159,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={\n  \"msg_type\": \"text\",\n  \"content\": {\n    \"text\": \"OpenAI 云端图片包生成完成\\n产品ID：\" + $json.product_id + \"\\n状态：\" + $json.status + \"\\n预览：\" + $json.preview_url + \"\\n上架数据：\" + $json.listing_ready_json\n  }\n}"
+        "jsonBody": "={\n  \"msg_type\": \"text\",\n  \"content\": {\n    \"text\": \"OpenAI ??????????\\n??ID?\" + $json.product_id + \"\\n???\" + $json.status + \"\\nJob ID?\" + $json.job_id + \"\\n?????\" + $json.status_url + \"\\n?????\" + $json.result_url\n  }\n}"
       },
       "id": "feishu-notification",
       "name": "飞书通知",
