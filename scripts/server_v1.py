@@ -29,8 +29,8 @@ except ImportError:
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-HOST = os.getenv("HOST", "127.0.0.1")
-PORT = int(os.getenv("PORT", "8899"))
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8080"))
 SERVICE_NAME = "MercadoLibre AutoDesign Server V1"
 DEFAULT_PRODUCT_ID = "NB001"
 DEFAULT_CSV = "input/products/products_sample.csv"
@@ -422,9 +422,9 @@ def build_home_html():
         <li><code>GET /generate-test</code> Browser-only test endpoint for NB001.</li>
         <li><code>GET /generate-batch-test</code> Browser-only batch test endpoint for NB001, NB002, and NB003.</li>
         <li><code>GET /preview_manifest</code> Returns preview manifest JSON if generated.</li>
-        <li><code>GET /files/{path}</code> Serves generated and uploaded files for browser/n8n access.</li>
-        <li><code>GET /job_status/{job_id}</code> Returns async OpenAI image pack job status.</li>
-        <li><code>GET /job_result/{job_id}</code> Returns async OpenAI image pack job result.</li>
+        <li><code>GET /files/{{file_path}}</code> Serves generated and uploaded files for browser/n8n access.</li>
+        <li><code>GET /job_status/{{job_id}}</code> Returns async OpenAI image pack job status.</li>
+        <li><code>GET /job_result/{{job_id}}</code> Returns async OpenAI image pack job result.</li>
         <li><code>POST /upload_source_images</code> Upload 1-5 source product images.</li>
         <li><code>POST /analyze_source_images</code> Analyze source images with OpenAI multimodal model.</li>
         <li><code>POST /generate</code> Official API endpoint for n8n and automation.</li>
