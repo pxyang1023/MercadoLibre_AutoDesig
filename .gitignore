@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.venv/
+venv/
+
+*.log
+server_*.out.log
+server_*.err.log
+
+*.zip
