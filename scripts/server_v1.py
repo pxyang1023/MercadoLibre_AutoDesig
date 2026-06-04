@@ -1,8 +1,12 @@
 import json
 import os
 import sys
+import mimetypes
+import re
+from email import policy
+from email.parser import BytesParser
 from html import escape
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -10,11 +14,13 @@ try:
     from .apply_copywriting_to_plan_v1 import run_apply
     from .copywriting_pipeline_v1 import run_pipeline as run_copywriting
     from .export_cloud_preview_v1 import export_preview
+    from .openai_image_pack_v2 import analyze_source_images, run_openai_image_pack
     from .run_pipeline_v1 import run_pipeline as run_image_pipeline
 except ImportError:
     from apply_copywriting_to_plan_v1 import run_apply
     from copywriting_pipeline_v1 import run_pipeline as run_copywriting
     from export_cloud_preview_v1 import export_preview
+    from openai_image_pack_v2 import analyze_source_images, run_openai_image_pack
     from run_pipeline_v1 import run_pipeline as run_image_pipeline
 
 
@@ -52,6 +58,13 @@ FINAL_IMAGE_NAMES = [
     "06_capacity.png",
     "07_summary.png",
 ]
+ALLOWED_UPLOAD_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+
+
+def safe_name(value):
+    value = str(value or "").strip()
+    value = re.sub(r"[^A-Za-z0-9_.-]+", "_", value)
+    return value.strip("._") or "file"
 
 
 def to_project_relative(path):
@@ -67,6 +80,25 @@ def resolve_project_path(path):
     if path.is_absolute():
         return path
     return PROJECT_ROOT / path
+
+
+def build_public_base_url(handler):
+    proto = handler.headers.get("X-Forwarded-Proto") or "http"
+    host = handler.headers.get("X-Forwarded-Host") or handler.headers.get("Host") or f"{HOST}:{PORT}"
+    return f"{proto}://{host}".rstrip("/")
+
+
+def make_public_file_url(handler, path):
+    return f"{build_public_base_url(handler)}/files/{to_project_relative(path)}"
+
+
+def file_response_path(url_path):
+    raw = unquote(url_path.removeprefix("/files/"))
+    candidate = (PROJECT_ROOT / raw).resolve()
+    root = PROJECT_ROOT.resolve()
+    if not str(candidate).startswith(str(root)):
+        raise RuntimeError("Invalid file path.")
+    return candidate
 
 
 def run_full_generation(request_data):
@@ -166,6 +198,68 @@ def build_batch_response(items):
     }
 
 
+def save_uploaded_source_images(handler):
+    content_type = handler.headers.get("Content-Type", "")
+    if "multipart/form-data" not in content_type:
+        raise RuntimeError("Content-Type must be multipart/form-data.")
+    content_length = int(handler.headers.get("Content-Length", "0"))
+    body = handler.rfile.read(content_length)
+    message = BytesParser(policy=policy.default).parsebytes(
+        b"Content-Type: " + content_type.encode("utf-8") + b"\r\n\r\n" + body
+    )
+
+    product_id = DEFAULT_PRODUCT_ID
+    file_parts = []
+    for part in message.iter_parts():
+        disposition = part.get("Content-Disposition", "")
+        if "form-data" not in disposition:
+            continue
+        name = part.get_param("name", header="content-disposition")
+        filename = part.get_filename()
+        if name == "product_id" and not filename:
+            product_id = part.get_content().strip() or DEFAULT_PRODUCT_ID
+        if name == "images" and filename:
+            file_parts.append((filename, part.get_payload(decode=True) or b""))
+
+    product_id = safe_name(product_id)
+    upload_dir = PROJECT_ROOT / "output" / product_id / "source_images"
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    if not 1 <= len(file_parts) <= 5:
+        raise RuntimeError("Upload 1 to 5 image files using multipart field name 'images'.")
+
+    uploaded = []
+    for index, (filename, payload) in enumerate(file_parts, start=1):
+        original_name = safe_name(Path(filename).name)
+        ext = Path(original_name).suffix.lower()
+        if ext not in ALLOWED_UPLOAD_EXTENSIONS:
+            raise RuntimeError(f"Unsupported image extension: {ext}. Use png, jpg, jpeg, or webp.")
+        target = upload_dir / f"{index:02d}_{original_name}"
+        target.write_bytes(payload)
+        uploaded.append(
+            {
+                "filename": target.name,
+                "path": to_project_relative(target),
+                "url": make_public_file_url(handler, target),
+            }
+        )
+
+    manifest_path = upload_dir / "uploaded_images_manifest.json"
+    manifest = {
+        "product_id": product_id,
+        "uploaded_images": uploaded,
+    }
+    with manifest_path.open("w", encoding="utf-8") as file:
+        json.dump(manifest, file, ensure_ascii=False, indent=2)
+
+    return {
+        "status": "success",
+        "product_id": product_id,
+        "uploaded_images": [item["url"] for item in uploaded],
+        "uploaded_images_manifest": make_public_file_url(handler, manifest_path),
+    }
+
+
 def build_home_html():
     preview_manifest_path = PROJECT_ROOT / "output" / DEFAULT_PRODUCT_ID / "cloud_preview" / "preview_manifest.json"
     preview_link = '<a class="button" href="/preview_manifest">Preview Manifest</a>' if preview_manifest_path.exists() else '<span class="button disabled">Preview Manifest not generated yet</span>'
@@ -251,8 +345,12 @@ def build_home_html():
         <li><code>GET /generate-test</code> Browser-only test endpoint for NB001.</li>
         <li><code>GET /generate-batch-test</code> Browser-only batch test endpoint for NB001, NB002, and NB003.</li>
         <li><code>GET /preview_manifest</code> Returns preview manifest JSON if generated.</li>
+        <li><code>GET /files/{path}</code> Serves generated and uploaded files for browser/n8n access.</li>
+        <li><code>POST /upload_source_images</code> Upload 1-5 source product images.</li>
+        <li><code>POST /analyze_source_images</code> Analyze source images with OpenAI multimodal model.</li>
         <li><code>POST /generate</code> Official API endpoint for n8n and automation.</li>
         <li><code>POST /generate-batch</code> Official batch API endpoint for n8n and automation.</li>
+        <li><code>POST /generate_openai_image_pack</code> OpenAI image pack V2 endpoint.</li>
       </ul>
       <p><strong>Note:</strong> <code>/generate</code> and <code>/generate-batch</code> are formal POST APIs. Test endpoints are only for browser testing.</p>
     </section>
@@ -475,6 +573,22 @@ class ServerV1Handler(BaseHTTPRequestHandler):
             self._send_html(200, build_home_html())
             return
 
+        if path.startswith("/files/"):
+            try:
+                file_path = file_response_path(path)
+                if not file_path.exists() or not file_path.is_file():
+                    self._send_json(404, {"status": "error", "message": "File not found."})
+                    return
+                body = file_path.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", mimetypes.guess_type(file_path.name)[0] or "application/octet-stream")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except RuntimeError as exc:
+                self._send_json(400, {"status": "error", "message": str(exc)})
+            return
+
         if path == "/health":
             self._send_json(
                 200,
@@ -534,27 +648,36 @@ class ServerV1Handler(BaseHTTPRequestHandler):
             404,
             {
                 "status": "error",
-                "message": "Not found. Available endpoints: GET /, GET /health, GET /generate-test, GET /generate-batch-test, GET /preview_manifest, POST /generate, POST /generate-batch",
+                "message": "Not found. Available endpoints: GET /, GET /health, GET /generate-test, GET /generate-batch-test, GET /preview_manifest, GET /files/{path}, POST /upload_source_images, POST /analyze_source_images, POST /generate, POST /generate-batch, POST /generate_openai_image_pack",
             },
         )
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path not in {"/generate", "/generate-batch"}:
+        if path not in {"/generate", "/generate-batch", "/generate_openai_image_pack", "/upload_source_images", "/analyze_source_images"}:
             self._send_json(
                 404,
                 {
                     "status": "error",
-                    "message": "Not found. Available endpoints: POST /generate, POST /generate-batch",
+                    "message": "Not found. Available endpoints: POST /upload_source_images, POST /analyze_source_images, POST /generate, POST /generate-batch, POST /generate_openai_image_pack",
                 },
             )
             return
 
         try:
+            if path == "/upload_source_images":
+                response = save_uploaded_source_images(self)
+                self._send_json(200, response)
+                return
+
             content_length = int(self.headers.get("Content-Length", "0"))
             raw_body = self.rfile.read(content_length).decode("utf-8") if content_length else "{}"
             request_data = json.loads(raw_body)
-            if path == "/generate-batch":
+            if path == "/analyze_source_images":
+                response = analyze_source_images(request_data)
+            elif path == "/generate_openai_image_pack":
+                response = run_openai_image_pack(request_data)
+            elif path == "/generate-batch":
                 response = build_batch_response(request_data.get("items"))
             else:
                 response = run_full_generation(request_data)
@@ -568,7 +691,7 @@ class ServerV1Handler(BaseHTTPRequestHandler):
                 },
             )
         except RuntimeError as exc:
-            status_code = 400 if path == "/generate-batch" else 500
+            status_code = 400 if path in {"/generate-batch", "/generate_openai_image_pack", "/upload_source_images", "/analyze_source_images"} else 500
             self._send_json(
                 status_code,
                 {

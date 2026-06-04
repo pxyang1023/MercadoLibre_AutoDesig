@@ -1,0 +1,272 @@
+{
+  "name": "MercadoLibre OpenAI Cloud Upload Image Pack V2",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dianshang.zeabur.app/upload_source_images",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "product_id",
+              "value": "PILLOW001"
+            }
+          ]
+        }
+      },
+      "id": "upload-source-images",
+      "name": "上传原图",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "notes": "上传图片时，请在 n8n HTTP Request 节点里把二进制文件字段名设置为 images，支持 1-5 张。"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dianshang.zeabur.app/analyze_source_images",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"product_id\": $json.product_id || \"PILLOW001\",\n  \"title\": $json.title || \"二次元角色抱枕\",\n  \"keywords\": $json.keywords || \"抱枕, 动漫抱枕, 靠枕\",\n  \"source_images\": $json.uploaded_images || []\n}"
+      },
+      "id": "analyze-source-images",
+      "name": "图片识别与分析",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const data = item.json;\n  return {\n    json: {\n      product_id: data.product_id || \"PILLOW001\",\n      title: data.title || \"二次元角色抱枕\",\n      keywords: data.keywords || \"抱枕, 动漫抱枕, 靠枕\",\n      target_country: data.target_country || \"MX\",\n      source_images: data.source_images || data.uploaded_images || [],\n      visual_analysis: data.visual_analysis || {},\n      detail_count_per_language: 6,\n      manual_override: {\n        enabled: false,\n        main_image_prompt: \"\",\n        detail_prompts_es: [],\n        detail_prompts_pt: [],\n        global_style_note: \"\",\n        negative_prompt: \"\"\n      },\n      output_options: {\n        create_preview_html: true,\n        create_listing_package: true,\n        notify_feishu: false\n      }\n    }\n  };\n});"
+      },
+      "id": "prompt-optimization",
+      "name": "提示词优化",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      ...item.json,\n      manual_override_note: \"人工提示词修改入口占位：需要人工改 prompt 时，把 manual_override.enabled 改为 true 并填写对应字段。\"\n    }\n  };\n});"
+      },
+      "id": "manual-prompt-entry",
+      "name": "人工修改提示词入口",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dianshang.zeabur.app/generate_openai_image_pack",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"product_id\": $json.product_id,\n  \"title\": $json.title,\n  \"keywords\": $json.keywords,\n  \"target_country\": $json.target_country,\n  \"source_images\": $json.source_images,\n  \"visual_analysis\": $json.visual_analysis,\n  \"detail_count_per_language\": $json.detail_count_per_language,\n  \"manual_override\": $json.manual_override,\n  \"output_options\": $json.output_options\n}"
+      },
+      "id": "generate-openai-pack",
+      "name": "OpenAI图片包生成",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1460,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      product_id: item.json.product_id,\n      status: item.json.status,\n      preview_url: item.json.preview_url,\n      listing_ready_json: item.json.listing_ready_url,\n      manifest_url: item.json.manifest_url,\n      main_image_url: item.json.main_image_url,\n      detail_images_es: item.json.detail_images_es || [],\n      detail_images_pt: item.json.detail_images_pt || [],\n      raw: item.json\n    }\n  };\n});"
+      },
+      "id": "format-results",
+      "name": "整理结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      ...item.json,\n      preview_and_listing_placeholder: {\n        preview_url: item.json.preview_url || \"\",\n        listing_ready_json: item.json.listing_ready_json || \"\",\n        note: \"对比预览和上架预留占位，暂不调用 MercadoLibre API。\"\n      }\n    }\n  };\n});"
+      },
+      "id": "preview-listing-placeholder",
+      "name": "对比预览和上架预留",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2060,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/bot/v2/hook/REPLACE_WITH_YOUR_WEBHOOK",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"msg_type\": \"text\",\n  \"content\": {\n    \"text\": \"OpenAI 云端图片包生成完成\\n产品ID：\" + $json.product_id + \"\\n状态：\" + $json.status + \"\\n预览：\" + $json.preview_url + \"\\n上架数据：\" + $json.listing_ready_json\n  }\n}"
+      },
+      "id": "feishu-notification",
+      "name": "飞书通知",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2360,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "上传原图",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传原图": {
+      "main": [
+        [
+          {
+            "node": "图片识别与分析",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片识别与分析": {
+      "main": [
+        [
+          {
+            "node": "提示词优化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提示词优化": {
+      "main": [
+        [
+          {
+            "node": "人工修改提示词入口",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "人工修改提示词入口": {
+      "main": [
+        [
+          {
+            "node": "OpenAI图片包生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI图片包生成": {
+      "main": [
+        [
+          {
+            "node": "整理结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理结果": {
+      "main": [
+        [
+          {
+            "node": "对比预览和上架预留",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "对比预览和上架预留": {
+      "main": [
+        [
+          {
+            "node": "飞书通知",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "openai-cloud-upload-image-pack-v2",
+  "triggerCount": 0,
+  "tags": []
+}

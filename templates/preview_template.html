@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --line: #dbe3ea;
+      --text: #102033;
+      --muted: #66758a;
+      --accent: #00a6b4;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      padding: 28px 22px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+    }
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+      color: #075985;
+    }
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      color: var(--muted);
+    }
+    .section {
+      margin-top: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, .06);
+    }
+    .source {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      margin: 8px 0;
+      overflow-wrap: anywhere;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #0f766e;
+    }
+    img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      background: #f8fafc;
+      border-radius: 10px;
+    }
+    a {
+      color: var(--accent);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OpenAI 图片包 V2 对比预览</h1>
+    <div class="meta">
+      <div>Product ID: <strong>{{PRODUCT_ID}}</strong></div>
+      <div>Title: <strong>{{PRODUCT_TITLE}}</strong></div>
+      <div>Keywords: <strong>{{KEYWORDS}}</strong></div>
+      <div>Target: <strong>{{TARGET_COUNTRY}}</strong></div>
+    </div>
+  </header>
+  <main>
+    <section class="section">
+      <h2>原图 / 输入参考</h2>
+      {{SOURCE_IMAGES}}
+    </section>
+    <section class="section">
+      <h2>新生成图片</h2>
+      <div class="grid">
+        {{GENERATED_IMAGES}}
+      </div>
+    </section>
+    <section class="section">
+      <h2>数据包</h2>
+      <p><a href="{{MANIFEST_URL}}" target="_blank">打开 preview_manifest.json</a></p>
+      <p><a href="{{LISTING_READY_URL}}" target="_blank">打开 listing_ready.json</a></p>
+    </section>
+  </main>
+</body>
+</html>
