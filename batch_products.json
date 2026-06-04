@@ -1,0 +1,29 @@
+[
+  {
+    "product_id": "NB001",
+    "csv": "data/products.csv",
+    "plan": {
+      "style": "default",
+      "layout": "standard"
+    },
+    "base_url": "http://dianshang.zeabur.app"
+  },
+  {
+    "product_id": "NB002",
+    "csv": "data/products.csv",
+    "plan": {
+      "style": "default",
+      "layout": "standard"
+    },
+    "base_url": "http://dianshang.zeabur.app"
+  },
+  {
+    "product_id": "NB003",
+    "csv": "data/products.csv",
+    "plan": {
+      "style": "default",
+      "layout": "standard"
+    },
+    "base_url": "http://dianshang.zeabur.app"
+  }
+]
